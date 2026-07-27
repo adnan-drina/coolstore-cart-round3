@@ -2,9 +2,9 @@
 
 ## T-001: Convert Application Bootstrap and Configuration
 
-**Class**: rewrite  
-**Finding References**: springboot-annotations-to-quarkus-00000  
-**Legacy Files**: `src/main/java/com/redhat/coolstore/CartServiceApplication.java:1-133`
+|**Class**: rewrite  
+|**Finding References**: springboot-annotations-to-quarkus-00000, springboot-actuator-to-quarkus-0100  
+|**Legacy Files**: `src/main/java/com/redhat/coolstore/CartServiceApplication.java:1-133`
 
 Convert Spring Boot application to Quarkus bootstrap:
 
