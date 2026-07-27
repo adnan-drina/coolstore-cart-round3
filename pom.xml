@@ -120,6 +120,24 @@
           </systemPropertyVariables>
         </configuration>
       </plugin>
+      <!-- Failsafe plugin for integration tests -->
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>${surefire-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <systemPropertyVariables>
+            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
       <!-- Coverage for plain JUnit tests (quarkus-jacoco only instruments
            @QuarkusTest runs). report binds to prepare-package so it fires
            under the factory's `mvn package` as well as `mvn verify`. -->
@@ -144,4 +162,24 @@
       </plugin>
     </plugins>
   </build>
+  
+  <!-- Native profile for GraalVM native image compilation -->
+  <profiles>
+    <profile>
+      <id>native</id>
+      <activation>
+        <property>
+          <name>quarkus.package.type</name>
+          <value>native</value>
+        </property>
+      </activation>
+      <properties>
+        <quarkus.native.enabled>true</quarkus.native.enabled>
+        <quarkus.native.additional-build-args>
+          -H:IncludeResources=application.properties
+          -H:IncludeResources=META-INF/resources/.*
+        </quarkus.native.additional-build-args>
+      </properties>
+    </profile>
+  </profiles>
 </project>
