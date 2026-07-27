@@ -206,10 +206,10 @@ class CartEndpointIntegrationTest {
     @Test
     void acceptanceCheck_returnsOk() {
         given()
-            .when().post("/api/cart/acceptance-check")
+            .when().get("/api/cart/acceptance-check")
             .then()
             .statusCode(200)
-            .body(equalTo("{\"status\": \"ok\"}"));
+            .body("status", equalTo("ok"));
     }
 
     @Test
@@ -268,7 +268,7 @@ class CartEndpointIntegrationTest {
             .statusCode(200);
 
         given()
-            .when().post("/api/cart/acceptance-check")
+            .when().get("/api/cart/acceptance-check")
             .then()
             .statusCode(200);
     }

@@ -277,10 +277,10 @@ class CompleteIntegrationTest {
     @Test
     void acceptanceCheck_returnsOkWithJson() {
         given()
-            .when().post("/api/cart/acceptance-check")
+            .when().get("/api/cart/acceptance-check")
             .then()
             .statusCode(200)
-            .body(equalTo("{\"status\": \"ok\"}"));
+            .body("status", equalTo("ok"));
     }
 
     // ==================== Root Index Page ====================

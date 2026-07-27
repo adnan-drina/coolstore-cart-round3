@@ -71,9 +71,9 @@ public class CartEndpoint {
         return shoppingCartService.checkout(cartId);
     }
 
-    @POST
+    @GET
     @Path("/acceptance-check")
     public Response acceptanceCheck() {
-        return Response.ok().entity("{\"status\": \"ok\"}").build();
+        return Response.ok(java.util.Map.of("status", "ok")).build();
     }
 }

@@ -117,3 +117,18 @@
   - `getProduct()` now checks elapsed time before fetching; skips catalog call if <60s since last refresh
   - Removed `productMap.clear()`; uses `putIfAbsent` to only populate missing entries
   - Timestamp stored after successful fetch
+
+### T-004: Acceptance check - change to GET with proper DTO
+- **Class**: infer
+- **Attempts**: 1
+- **Result**: SUCCESS
+- **Files Touched**: 
+  - `src/main/java/com/demo/rest/CartEndpoint.java` (changed @POST to @GET, replaced hand-built JSON with proper DTO)
+  - `src/test/java/com/demo/integration/CompleteIntegrationTest.java` (updated acceptanceCheck_returnsOkWithJson test to use GET)
+  - `src/test/java/com/demo/rest/CartEndpointIntegrationTest.java` (updated acceptanceCheck_returnsOk and testAllRestEndpoints tests to use GET)
+- **Verification**: mvn -q clean test passes - GET /api/cart/acceptance-check returns proper JSON response
+- **Sensors**: Green (sensors.sh task)
+- **Changes**: 
+  - Changed `@POST @Path("/acceptance-check")` to `@GET @Path("/acceptance-check")`
+  - Replaced hand-built JSON string `Response.ok().entity("{\"status\": \"ok\"}")` with proper DTO: `Response.ok(java.util.Map.of("status", "ok"))`
+  - Updated all tests to use GET instead of POST and validate proper JSON structure
