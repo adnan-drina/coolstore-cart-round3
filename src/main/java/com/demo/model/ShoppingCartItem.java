@@ -12,7 +12,7 @@ public class ShoppingCartItem implements Serializable {
 	private Product product;
 	
 	public ShoppingCartItem() {
-		
+		// Default constructor required for JPA serialization
 	}
 	
 	public double getPrice() {
