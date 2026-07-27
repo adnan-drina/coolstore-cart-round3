@@ -5,8 +5,9 @@ import com.demo.service.CatalogService;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.Alternative;
-import jakarta.inject.Singleton;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,8 @@ import java.util.Map;
 public class MockCatalogServiceResource implements QuarkusTestResourceLifecycleManager {
 
     @Alternative
+    @Priority(1)
+    @RestClient
     @ApplicationScoped
     public static class MockCatalogService implements CatalogService {
         @Override

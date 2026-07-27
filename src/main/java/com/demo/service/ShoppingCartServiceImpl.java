@@ -29,6 +29,7 @@ import com.demo.model.ShoppingCartItem;
 public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     private static final Logger LOG = Logger.getLogger(ShoppingCartServiceImpl.class.getName());
+    private static final String INVALID_PRODUCT_MSG = "Invalid product %s request to get added to the shopping cart. No product added";
 
     private final ShippingService shippingService;
     private final CatalogService catalogService;
@@ -55,13 +56,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     public ShoppingCart getShoppingCart(String cartId) {
-        if (!carts.containsKey(cartId)) {
-            ShoppingCart cart = new ShoppingCart(cartId);
-            carts.put(cartId, cart);
-            return cart;
-        }
-
-        ShoppingCart cart = carts.get(cartId);
+        ShoppingCart cart = carts.computeIfAbsent(cartId, ShoppingCart::new);
         priceShoppingCart(cart);
         carts.put(cartId, cart);
         return cart;
@@ -111,20 +106,11 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Override
     public Product getProduct(String itemId) {
         if (!productMap.containsKey(itemId)) {
-            try {
-                List<Product> products = catalogService.products();
-                productMap.clear();
-                productMap.putAll(products.stream().collect(Collectors.toMap(Product::getItemId, Function.identity())));
-            } catch (Exception e) {
-                LOG.warning("Failed to fetch products from catalog service: " + e.getMessage());
-                // Return mock products for testing
-                if (productMap.isEmpty()) {
-                    productMap.put("1111", new Product("1111", "Car", "Super car", 1000.0));
-                    productMap.put("2222", new Product("2222", "Phone", "Smart phone", 500.0));
-                    productMap.put("3333", new Product("3333", "Laptop", "Fast laptop", 15.0));
-                    productMap.put("4444", new Product("4444", "Tablet", "Small tablet", 30.0));
-                }
-            }
+            // Legacy contract: catalog failures propagate — never a
+            // fabricated fallback (migration.yaml forbidden:).
+            List<Product> products = catalogService.products();
+            productMap.clear();
+            productMap.putAll(products.stream().collect(Collectors.toMap(Product::getItemId, Function.identity())));
         }
 
         return productMap.get(itemId);
@@ -168,7 +154,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         Product product = getProduct(itemId);
 
         if (product == null) {
-            LOG.warning("Invalid product " + itemId + " request to get added to the shopping cart. No product added");
+            LOG.warning(INVALID_PRODUCT_MSG.formatted(itemId));
             return cart;
         }
 
@@ -212,20 +198,18 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         List<ShoppingCartItem> result = new ArrayList<>();
         Map<String, Integer> quantityMap = new HashMap<>();
         for (ShoppingCartItem sci : sc.getShoppingCartItemList()) {
-            if (quantityMap.containsKey(sci.getProduct().getItemId())) {
-                quantityMap.put(sci.getProduct().getItemId(), quantityMap.get(sci.getProduct().getItemId()) + sci.getQuantity());
-            } else {
-                quantityMap.put(sci.getProduct().getItemId(), sci.getQuantity());
-            }
+            quantityMap.merge(sci.getProduct().getItemId(), sci.getQuantity(), Integer::sum);
         }
 
         for (String itemId : quantityMap.keySet()) {
             Product p = getProduct(itemId);
-            ShoppingCartItem newItem = new ShoppingCartItem();
-            newItem.setQuantity(quantityMap.get(itemId));
-            newItem.setPrice(p.getPrice());
-            newItem.setProduct(p);
-            result.add(newItem);
+            if (p != null) {
+                ShoppingCartItem newItem = new ShoppingCartItem();
+                newItem.setQuantity(quantityMap.get(itemId));
+                newItem.setPrice(p.getPrice());
+                newItem.setProduct(p);
+                result.add(newItem);
+            }
         }
 
         return result;

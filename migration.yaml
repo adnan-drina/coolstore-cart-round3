@@ -25,4 +25,7 @@ forbidden:
   # Fabrication tripwires (run #2 T-027): sensors fail any commit that
   # introduces these into src/main.
   - getMockProducts
+  - "mock products"
+  - "Mock products"
+  - "mock Products"
   - "Fallback to mock"

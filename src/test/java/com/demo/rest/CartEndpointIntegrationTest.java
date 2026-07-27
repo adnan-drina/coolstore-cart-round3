@@ -220,14 +220,12 @@ class CartEndpointIntegrationTest {
 
     @Test
     void testAllRestEndpoints() {
-        // Test GET /api/cart/{cartId}
         given()
             .pathParam("cartId", "test-cart")
             .when().get("/api/cart/{cartId}")
             .then()
             .statusCode(200);
 
-        // Test POST /api/cart/{cartId}/{itemId}/{quantity}
         given()
             .pathParam("cartId", "test-cart")
             .pathParam("itemId", ITEM_ID)
@@ -236,7 +234,6 @@ class CartEndpointIntegrationTest {
             .then()
             .statusCode(200);
 
-        // Test POST /api/cart/{cartId}/{tmpId}
         given()
             .pathParam("cartId", "dest-cart")
             .pathParam("tmpId", "test-cart")
@@ -244,7 +241,6 @@ class CartEndpointIntegrationTest {
             .then()
             .statusCode(200);
 
-        // Test DELETE /api/cart/{cartId}/{itemId}/{quantity}
         given()
             .pathParam("cartId", "test-cart")
             .pathParam("itemId", ITEM_ID)
@@ -253,14 +249,12 @@ class CartEndpointIntegrationTest {
             .then()
             .statusCode(200);
 
-        // Test POST /api/cart/checkout/{cartId}
         given()
             .pathParam("cartId", "test-cart")
             .when().post("/api/cart/checkout/{cartId}")
             .then()
             .statusCode(200);
 
-        // Test POST /api/cart/acceptance-check
         given()
             .when().post("/api/cart/acceptance-check")
             .then()

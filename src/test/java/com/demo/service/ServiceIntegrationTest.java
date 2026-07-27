@@ -2,7 +2,6 @@ package com.demo.service;
 
 import com.demo.model.Product;
 import com.demo.model.ShoppingCart;
-import com.demo.model.ShoppingCartItem;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
