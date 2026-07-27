@@ -1,6 +1,7 @@
 package com.redhat.coolstore.rest;
 
 import java.io.Serializable;
+
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -8,7 +9,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -31,11 +31,8 @@ public class CartEndpoint implements Serializable {
     @GET
     @Path("/{cartId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getCart(@PathParam("cartId") String cartId) {
-        return shoppingCartService.getShoppingCart(cartId)
-                .map(Response::ok)
-                .orElse(Response.status(Response.Status.NOT_FOUND))
-                .build();
+    public ShoppingCart getCart(@PathParam("cartId") String cartId) {
+        return shoppingCartService.getShoppingCart(cartId);
     }
 
     @POST

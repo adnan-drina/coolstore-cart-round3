@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -51,15 +50,17 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
 
     @Override
-    public Optional<ShoppingCart> getShoppingCart(String cartId) {
+    public ShoppingCart getShoppingCart(String cartId) {
         if (!carts.containsKey(cartId)) {
-            return Optional.empty();
+            ShoppingCart cart = new ShoppingCart(cartId);
+            carts.put(cartId, cart);
+            return cart;
         }
 
         ShoppingCart cart = carts.get(cartId);
         priceShoppingCart(cart);
         carts.put(cartId, cart);
-        return Optional.of(cart);
+        return cart;
     }
 
     public void priceShoppingCart(ShoppingCart sc) {
@@ -118,7 +119,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     public ShoppingCart deleteItem(String cartId, String itemId, int quantity) {
         List<ShoppingCartItem> toRemoveList = new ArrayList<>();
 
-        ShoppingCart cart = getShoppingCart(cartId).orElseThrow();
+        ShoppingCart cart = getShoppingCart(cartId);
 
         cart.getShoppingCartItemList().stream()
                 .filter(sci -> sci.getProduct().getItemId().equals(itemId))
@@ -139,11 +140,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     public ShoppingCart checkout(String cartId) {
-        ShoppingCart cart = getShoppingCart(cartId).orElseGet(() -> {
-            ShoppingCart newCart = new ShoppingCart(cartId);
-            carts.put(cartId, newCart);
-            return newCart;
-        });
+        ShoppingCart cart = getShoppingCart(cartId);
         cart.resetShoppingCartItemList();
         priceShoppingCart(cart);
         carts.put(cartId, cart);
@@ -152,11 +149,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     public ShoppingCart addItem(String cartId, String itemId, int quantity) {
-        ShoppingCart cart = getShoppingCart(cartId).orElseGet(() -> {
-            ShoppingCart newCart = new ShoppingCart(cartId);
-            carts.put(cartId, newCart);
-            return newCart;
-        });
+        ShoppingCart cart = getShoppingCart(cartId);
         Product product = getProduct(itemId);
 
         if (product == null) {
@@ -185,12 +178,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Override
     public ShoppingCart set(String cartId, String tmpId) {
 
-        ShoppingCart cart = getShoppingCart(cartId).orElseGet(() -> {
-            ShoppingCart newCart = new ShoppingCart(cartId);
-            carts.put(cartId, newCart);
-            return newCart;
-        });
-        ShoppingCart tmpCart = getShoppingCart(tmpId).orElse(null);
+        ShoppingCart cart = getShoppingCart(cartId);
+        ShoppingCart tmpCart = getShoppingCart(tmpId);
 
         if (tmpCart != null) {
             cart.resetShoppingCartItemList();
