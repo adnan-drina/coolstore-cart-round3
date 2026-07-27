@@ -203,3 +203,24 @@ Checkable, story-scoped:
 - Integration tests validate complete cart workflow: add items, pricing calculations, checkout
 - Business logic validation: shipping calculations, promotions, cart operations tested
 - Factory pipeline green: Maven build passes, no SonarQube violations, image builds successfully
+
+## Carried from S01 (delta + retro, 2026-07-27)
+
+- **S01 pom debt (this story closes it)**: javaee-pom-to-quarkus-00030,
+  -00050, -00060 still fire on the destination pom (compiler/failsafe/
+  native-profile conventions incomplete) — T-001s resolved-by-scaffold
+  was partially wrong; fix the pom alongside this storys config work.
+- **Promo composition semantics (spec must pin this)**: legacy
+  PromoService ZEROES shippingTotal and keeps shippingPromoSavings
+  informational (cartTotal = itemTotal + shippingTotal). Do NOT use the
+  additive composition (charge shipping then refund via savings) — both
+  yield 2000.0 on the standard fixture but diverge elsewhere.
+- **Expectation-helper pattern**: S01s ShoppingCartPricingTest and
+  ShippingTierTest carry test-local expectation models of the pricing/
+  tier arithmetic — this storys REAL services must satisfy those same
+  values; port the helpers assertions against the migrated services,
+  do not duplicate the helpers into src/main.
+- **Ship surface**: migration.yaml acceptance.path
+  /api/cart/acceptance-check must be served by a real endpoint, route /
+  must serve 200 (minimal index page), and quarkus.http.root-path stays
+  DEFAULT (SHIPPING.md acceptance-correction has the decided shapes).
