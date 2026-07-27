@@ -1,7 +1,6 @@
 package com.demo;
 
 import io.quarkus.runtime.Quarkus;
-import io.quarkus.runtime.QuarkusApplication;
 
 public class CartServiceApplication {
 
