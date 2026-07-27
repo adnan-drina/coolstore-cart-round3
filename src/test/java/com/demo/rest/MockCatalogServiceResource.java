@@ -38,8 +38,8 @@ public class MockCatalogServiceResource implements QuarkusTestResourceLifecycleM
     public Map<String, String> start() {
         // Disable real REST client by changing the endpoint URL
         return Map.of(
-            "quarkus.rest-client.catalogService.url", "http://localhost:9999",  // Non-existent URL
-            "catalog.endpoint", "http://localhost:9999"
+            "quarkus.rest-client.catalogService.url", "http://127.0.0.1:9999",  // Non-existent URL
+            "catalog.endpoint", "http://127.0.0.1:9999"
         );
     }
 

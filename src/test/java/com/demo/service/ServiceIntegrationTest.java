@@ -163,7 +163,7 @@ class ServiceIntegrationTest {
         
         // Remove item
         cart = cartService.deleteItem("test-cart", "1111", 1);
-        assertThat(cart.getShoppingCartItemList()).hasSize(0);
+        assertThat(cart.getShoppingCartItemList()).isNotNull().isEmpty();
         assertThat(cart.getCartItemTotal()).isEqualTo(0.0);
     }
 
@@ -196,7 +196,7 @@ class ServiceIntegrationTest {
         
         // Checkout should clear cart items but maintain pricing calculation
         cart = cartService.checkout("checkout-cart");
-        assertThat(cart.getShoppingCartItemList()).hasSize(0);
+        assertThat(cart.getShoppingCartItemList()).isNotNull().isEmpty();
         assertThat(cart.getCartItemTotal()).isEqualTo(0.0);
         assertThat(cart.getCartTotal()).isEqualTo(0.0);
     }
@@ -258,7 +258,7 @@ class ServiceIntegrationTest {
         ShoppingCart cart = cartService.addItem("invalid-cart", "nonexistent", 1);
         
         // Cart should exist but be empty (no items added)
-        assertThat(cart.getShoppingCartItemList()).hasSize(0);
+        assertThat(cart.getShoppingCartItemList()).isNotNull().isEmpty();
         assertThat(cart.getCartItemTotal()).isEqualTo(0.0);
     }
 
