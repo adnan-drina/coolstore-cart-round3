@@ -83,8 +83,11 @@ class CartEndpointIntegrationTest {
 
     @Test
     void add_sameItem_deduplicatesAndAccumulatesQuantity() {
+        String uniqueCartId = "dedup-cart-" + System.currentTimeMillis();
+        
+        // Add 2 items of same type
         given()
-            .pathParam("cartId", "dedup-cart")
+            .pathParam("cartId", uniqueCartId)
             .pathParam("itemId", ITEM_ID)
             .pathParam("quantity", 2)
             .when().post("/api/cart/{cartId}/{itemId}/{quantity}")
