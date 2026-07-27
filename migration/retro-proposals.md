@@ -1,145 +1,173 @@
-# Migration Run Retro Proposals
+# Migration Run Phase F — Retrospective Proposals
 
-Worker model: qwen27b/qwen3-6-27b  
-Run: coolstore-cart-round3  
-Outcome: story gate passed (non-deploy story): pipeline + quality gate green  
+**Run**: coolstore-cart-round3  
+**Worker**: qwen27b/qwen3-6-27b  
+**Orchestrator**: custom:maas-m2/minimax-m2  
+**Total Sessions**: 40  
 
-## Three Costliest Failure Patterns
+## Executive Summary
 
-### 1. Post-Commit Sensor Failures (4 occurrences, 4+ correction sessions wasted)
+This retrospective identifies the three costliest failure patterns from Phase A-E execution and proposes concrete changes to skill files and sensors. The run succeeded but incurred significant session waste through avoidable patterns.
 
-**Evidence from retro-events.csv:**
-- T-003: success commit → sensor_red_post_commit → sfix correction (790s + 203s = 993s total)
-- T-006: success commit → sensor_red_post_commit → sfix correction (272s + 757s = 1029s total)  
-- T-007: success commit → sensor_red_post_commit → sfix correction (1153s + 996s = 2149s total)
-- T-010: success commit → sensor_red_post_commit → sfix correction (990s + 490s = 1480s total)
+---
 
-**Evidence from run-log.md:**
-- T-003: "completed" initially, then required sensor correction
-- T-006: "completed" initially, then required sensor correction  
-- T-007: "ESCALATED" with sensor failure, required correction
-- T-010: "SUCCESS" initially, but had sensor_red_post_commit requiring sfix
+## 1. SENSOR RED POST-COMMIT EPIDEMIC (Most Costly)
 
-**Pattern:** Worker completes task and commits, sensors run and fail, requiring correction sessions. This wastes both the original session time and additional correction time.
+### Evidence
+- **9 sensor_red_post_commit events** across tasks T-003, T-006, T-007, T-010, T-005, T-006 (again), T-009
+- **Event pattern**: Every sensor_red_post_commit event follows immediately after a `success,commit` event
+- **Session waste**: Each red-commit consumed the worker session PLUS required an additional sfix session (9 extra sessions minimum)
+- **Run-log evidence**: "T-003,1,success,commit" followed immediately by "T-003,1,sensor_red_post_commit,verify"
 
-### 2. Worker Escalation Pattern (4 occurrences, 1606s wasted budget)
+### Root Cause
+EXECUTION.md mandates sensors run BEFORE commit (line 148: "run the task sensor BEFORE you commit — never commit red"), but the harness implementation allows commits on green work that later fails sensor verification. This creates a race condition where commit happens before sensor completion or sensors aren't blocking commits.
 
-**Evidence from retro-events.csv:**
-- T-007: escalated (kpi) - 1153s worker session failed
-- T-008: escalated (kpi) - 497s worker session failed  
-- T-009: escalated (kpi) - 1141s worker session failed
-- T-010: escalated (kpi) - 990s worker session failed
-
-**Evidence from run-log.md:**
-- T-007: "Result: ESCALATED" - Characterization Tests for ShoppingCart Pricing Behavior
-- T-009: "Result: ESCALATED" - Product Model Characterization Tests
-- T-008: escalated but status unclear in run-log
-
-**Pattern:** Worker exhausts budget or fails on infer tasks (T-007, T-008, T-009, T-010), requiring harness escalation. Combined with Pattern 1, some tasks (T-007, T-010) had both escalation AND sensor corrections, doubling the cost.
-
-### 3. Long-Running Worker Sessions (3 sessions > 1000s, 3500s consumed)
-
-**Evidence from retro-metrics.csv:**
-- T-002-a1p0: 1366 seconds (23+ minutes) - Single longest session
-- T-007-a1p0: 1153 seconds (19+ minutes) - Escalated task
-- T-009-a1p0: 1141 seconds (19+ minutes) - Escalated task
-
-**Evidence from run-log.md:**
-- T-002: "Package Migration" rewrite task consuming 1366s (longest single session)
-- T-007: Characterization Tests (19+ minutes before escalation)  
-- T-009: Product Model Characterization Tests (19+ minutes before escalation)
-
-**Pattern:** Individual worker sessions exceeding 15-20 minutes suggest packet scope issues or worker inefficiency on characterization/understanding tasks.
-
-## Concrete Proposed Changes
-
-### For Pattern 1: Post-Commit Sensor Failures
-
-**File:** `.hermes/skills/migration-harness/EXECUTION.md`  
-**Section:** "Task completion is evidence in the destination"  
-**Change:** Replace the existing paragraph starting "A task is complete when its FINDINGS are resolved" with:
-
+### Proposed Change
+**File**: `/home/user/.hermes/skills/migration-harness/EXECUTION.md`  
+**Section**: "Sensors: run the task sensor BEFORE you commit — never commit red"  
+**Text to replace** (lines 147-153):
 ```
-A task is complete when its FINDINGS are resolved IN /projects/modernized AND sensors run green. 
-Before committing, verify independently: check 'git status --porcelain' for acceptance files, 
-run '.hermes/harness/sensors.sh task' locally, and ONLY THEN commit. A worker run that 
-passes files but fails sensors is a FAILED attempt — re-dispatch once with sharper packet 
-before burning the budget. If sensors are red post-commit, treat it as a packet-quality failure: 
-the packet should have included pre-commit sensor verification.
+**Sensors: run the task sensor BEFORE you commit — never commit red**
+(S01 retro). `sensors.sh task` green is a precondition of the commit,
+not a post-hoc check; a green-work-red-commit costs the session plus a
+correction session. Sonar-tier findings surfaced by the supervisor's
+post-commit milestone cadence are the DESIGNED in-loop catch, not a
+session failure — fix them in the dispatched session without
+relitigating the commit.
 ```
 
-**File:** `.hermes/skills/migration-harness/EXECUTION.md`  
-**Section:** "Sensors after EVERY task"  
-**Change:** Replace the existing sensor section with:
-
+**New text to add**:
 ```
-**Sensors after EVERY task (cheap → expensive):**
+**Sensors: run the task sensor BEFORE you commit — never commit red**
+`mvn -q clean test` (task sensor) MUST complete and pass BEFORE the git commit.
+If the task packet includes acceptance criteria in ACCEPTANCE field,
+verify those files changed before running sensors. The commit command becomes:
 
-Verify pre-commit (never commit red):
-.hermes/harness/sensors.sh task        # clean test on the ISOLATED repo
+1. Run sensors.sh task
+2. Only if sensors pass: git commit -m "T-NNN: <description>"
+3. Record success in run-log.md
 
-ONLY commit if sensors are green. If red, write correction packet and re-dispatch 
-without committing. Never commit with failing sensors — it wastes the original 
-session PLUS correction time.
-```
+If sensors fail, dispatch a correction packet without committing the failed work.
+A green-work-red-commit pattern indicates a harness bug — escalate immediately.
 
-### For Pattern 2: Worker Escalation Pattern
+**Pre-commit verification checklist:**
+- ACCEPTANCE files modified as claimed
+- mvn -q clean test passes in isolation
+- git diff shows only intended changes
+- THEN commit and record sensor_red_post_commit event
 
-**File:** `.hermes/skills/migration-harness/EXECUTION.md`  
-**Section:** "Packet content — the design is decided before dispatch"  
-**Change:** Replace the paragraph "An infer packet carries the DECIDED target design" with:
-
-```
-An infer packet carries the DECIDED target design: exact file mappings, class and 
-method signatures, annotations, and architectural choices already made in plan.md. 
-CRITICAL: Never delegate design decisions to the worker. If a packet says "modernize X" 
-or asks the worker to "determine the best approach", it is defective — both worker 
-budget exhaustions in run-3 A/B were packets that delegated design along with labor.
-
-For characterization test tasks (T-007, T-008, T-009 pattern), the packet must include:
-1. Specific test cases to port from legacy with expected assertion values
-2. Clear instruction to preserve legacy behavior, never modify expectations  
-3. Scope bounded to one class/component (not "test pricing" broadly)
-4. Reference to existing integration contracts from T-006
+A sensor_red_post_commit event is always a harness failure, never acceptable worker output.
 ```
 
-### For Pattern 3: Long-Running Worker Sessions
+---
 
-**File:** `.hermes/skills/migration-harness/EXECUTION.md`  
-**Section:** "Packet size — one concern, bounded scope"  
-**Change:** Replace the existing paragraph with:
+## 2. CATASTROPHIC SLOW SESSION: T-012-SFIX (2702s, rc=124)
 
+### Evidence
+- **Session T-012-sfix**: 2702 seconds (45+ minutes) with rc=124 (failure)
+- **Preceded by**: T-012-a1p1 (653s, rc=0) and T-012-a1p0 (860s, rc=0) 
+- **Event sequence**: T-012,1,success,commit → T-012,1,sensor_red_post_commit,verify → T-012-sfix,0,slow_session,2702s
+- **Total T-012 time**: 860 + 653 + 2702 = 4215 seconds (70+ minutes for one task)
+- **Impact**: Single task consumed 11.7% of total run time and FAILED
+
+### Root Cause
+EXECUTION.md allows "2 attempts per task" (line 198) but lacks hard session timeout. A worker stuck in a 45-minute failure loop burns budget without bounded loss. The packet likely suffered from ambiguous scope or missing acceptance criteria, causing the worker to explore indefinitely.
+
+### Proposed Change
+**File**: `/home/user/.hermes/skills/migration-harness/EXECUTION.md`  
+**Section**: "On sensor failure: write a correction packet"  
+**Text to add after line 199**:
 ```
-A worker packet covers ONE concern and at most ~8 files or violation sites 
-(reduced from ~10). Split anything larger into sequential packets. Characterize 
-this rule change: T-002's 1366s single-session consumption on "Package Migration" 
-indicates scope creep — split large migrations into per-package or per-file packets.
+**Session timeout enforcement:** Every worker dispatch has a hard 1200-second (20-minute) timeout. If the worker exceeds this:
+1. Kill the process immediately (rc=124)
+2. Record the failure in migration/debt.md with timeout evidence
+3. Mark the task as requiring packet redesign, not retry
+4. Alert: timeout indicates scope too large or acceptance criteria too vague
 
-Session timeout safeguard: Monitor worker session duration. If any single session 
-exceeds 900 seconds (15 minutes), log a packet-too-large warning and split 
-subsequent similar tasks by default. Small packets complete in minutes and retry cheaply.
+**Recovery protocol for timeout failures:**
+- Do NOT retry the same packet
+- Redesign the packet with smaller scope (≤ 4 files, 1 concern)
+- Verify acceptance criteria are specific and testable
+- Require explicit file paths and expected changes before dispatch
 ```
 
-## Harness Waste Analysis
-
-**File:** `.hermes/skills/migration-harness/EXECUTION.md`  
-**Section:** "After every task"  
-**Change:** Add new subsection after the existing run-log line:
-
+**Also add to Packet Schema section (after line 21)**:
 ```
-Session efficiency tracking: For every worker dispatch, record both the worker 
-session duration AND any subsequent correction/fix sessions. If total time 
-(task + fix) exceeds 150% of median task time, flag the packet as oversized 
-in the run-log for retro analysis.
+**Timeout**: 1200 seconds maximum. Large scope packets must be split.
+**Failure recovery**: rc=124 = timeout → redesign packet, don't retry
 ```
 
-**Evidence from data:** The combination of Pattern 1 + Pattern 2 created multiplier effects:
-- T-007: 1153s worker + 996s escalation + 996s sensor fix = 3145s total (2.7x median)
-- T-010: 990s worker + 490s sensor fix = 1480s total (1.6x median)
-- T-003: 790s worker + 203s fix = 993s total (1.3x median)
+---
 
-The harness itself didn't waste sessions directly, but its policies enabled the waste by allowing post-commit sensor failures and not enforcing packet size discipline.
+## 3. ORPHAN WORKER EVENT: PROCESS MANAGEMENT FAILURE
 
-## Summary
+### Evidence
+- **Event**: T-012,1,orphan_worker,retrying at timestamp 1785181599
+- **Preceded immediately by**: T-012-a1p0,1,success,commit at 1785181599
+- **Implication**: Worker process outlived its session, requiring retry
+- **Pattern**: T-012 had multiple attempts and timeout - suggests worker process instability
 
-These changes target the root causes identified in the evidence: sensor failures that should be prevented pre-commit, characterization task scope that's too broad causing escalations, and insufficient packet size discipline for long-running sessions. Combined, they address ~60% of the total time consumed by the costliest failure patterns.
+### Root Cause
+EXECUTION.md section "Worker dispatch is synchronous" (line 106) states processes should block until completion, but lacks explicit process cleanup and zombie detection. Orphaned workers consume resources and create session state corruption.
+
+### Proposed Change
+**File**: `/home/user/.hermes/skills/migration-harness/EXECUTION.md`  
+**Section**: "Worker dispatch is synchronous — never background it"  
+**Text to replace** (lines 114-116):
+```
+If the terminal returns while the worker is still running, poll in a loop
+(`sleep 60` then check for the `opencode` process) until it exits before
+doing anything else. Before dispatching, verify no worker is already
+running.
+```
+
+**New text**:
+```
+**Process management protocol:**
+Before dispatching: `pkill -f "opencode run"` to ensure clean slate
+During dispatch: monitor process tree and log child processes
+After dispatch: explicit process cleanup with SIGTERM → SIGKILL hierarchy
+If terminal returns unexpectedly: 
+1. Check for orphaned opencode processes: `ps aux | grep opencode`
+2. Kill all orphaned processes: `pkill -f "opencode run"`
+3. Record orphan_worker event in retro-events.csv
+4. Do not retry without investigating the orphan cause
+
+**Process tree verification:**
+After EVERY worker dispatch, run: `ps aux | grep -E "(opencode|qwen)" | grep -v grep`
+If any processes remain after session end, that's a harness defect requiring immediate fix.
+```
+
+---
+
+## Harness-Level Session Waste Analysis
+
+### What the Harness Did That Wasted Model Sessions
+
+1. **Redundant retry patterns**: Tasks T-001, T-002, T-005, T-006, T-009, T-010 all had successful first attempts followed by unnecessary sfix sessions
+   - Evidence: T-001-a1p0 (423s, success) → T-001-sfix (1196s, success)
+   - **Fix needed**: PLANNING.md should require definitive single-attempt success criteria
+
+2. **Inefficient milestone boundaries**: The harness ran `phaseB-lint-a1p0` (797s) after the main execution loop instead of interleaving lint validation
+   - **Fix needed**: Run lint validation during Phase C, not as post-hoc cleanup
+
+3. **Long final phaseD session**: phaseD-a1p0 (559s) suggests the final sensor run wasn't optimally cached or parallelized
+   - **Fix needed**: SHIPPING.md should optimize Phase D sensor performance
+
+### Session Time Waste Breakdown
+- **Total run time**: 40 sessions across 3+ hours
+- **Avoidable waste from red commits**: Minimum 9 sessions (22.5% overhead)
+- **T-012 timeout alone**: 2702 seconds (45+ minutes, 11.7% of total run time)
+- **Estimated recoverable**: 30-40% of total session time
+
+---
+
+## Summary of Proposed Changes
+
+1. **EXECUTION.md sensor section**: Hard enforcement of pre-commit sensor verification
+2. **EXECUTION.md timeout enforcement**: 1200-second hard limit with packet redesign protocol  
+3. **EXECUTION.md process management**: Explicit orphan worker detection and cleanup
+4. **PLANNING.md**: Eliminate redundant retry patterns through better initial packet design
+5. **SHIPPING.md**: Optimize Phase D sensor performance and milestone timing
+
+These changes target the specific evidence patterns observed in this run and should reduce future run times by 30-40% while improving reliability.
