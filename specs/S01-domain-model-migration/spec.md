@@ -107,6 +107,8 @@ This specification documents the domain model layer migration for the Coolstore 
 - Application bootstrap: `CartServiceApplication`, `JerseyConfig`
 - External integration: `CatalogService` Feign client
 
+**UI Surface Waiver**: Legacy UI surface is waived for S01 since domain models provide backend-only data contracts and are consumed exclusively by the service layer modernization covered in S02.
+
 ## Preservation Requirements
 
 ### Serialization Compatibility
