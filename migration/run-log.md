@@ -5,3 +5,5 @@ Appended by the Hermes orchestrator after every task (see
 
 | Task | Class | Attempts | Result | Files |
 |---|---|---|---|---|
+| T-001 | rewrite | 1 | resolved-by-scaffold | pom.xml |
+|
