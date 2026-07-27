@@ -3,12 +3,12 @@
 ## Executive summary
 
 Autonomous migration of coolstore-cart-round3:
-story gate passed (non-deploy story): pipeline + quality gate green. Findings delta and per-task detail: migration/run-log.md;
+success: shipped, route 200, 1 products. Findings delta and per-task detail: migration/run-log.md;
 debt: migration/debt.md. Orchestrator custom:maas-m2/minimax-m2,
-worker qwen27b/qwen3-6-27b, 15 model sessions.
+worker qwen27b/qwen3-6-27b, 40 model sessions.
 
-- Outcome: story gate passed (non-deploy story): pipeline + quality gate green
-- Supervisor version: d33a290a; run base: 8afd2da4b6b252dc61096ff86072f1fa7f6f549f
+- Outcome: success: shipped, route 200, 1 products
+- Supervisor version: 4f274240; run base: f80b9c2a65b292cc64f8d1048e18cd3477d04496
 - Orchestrator: custom:maas-m2/minimax-m2; worker: qwen27b/qwen3-6-27b
 
 ## Sessions
@@ -30,15 +30,44 @@ worker qwen27b/qwen3-6-27b, 15 model sessions.
 | T-010-a1p0 | 990 | rc=0 |
 | T-010-sfix | 490 | rc=0 |
 | phaseD-a1p0 | 219 | rc=0 |
+| phaseF | 38 | rc=0 |
+| phaseB-lint-a1p0 | 797 | rc=0 |
+| treefix | 92 | rc=0 |
+| T-002-a1p0 | 151 | rc=0 |
+| T-001-a1p0 | 1416 | rc=0 |
+| T-001-sfix | 1196 | rc=0 |
+| T-002-a1p0 | 1053 | rc=0 |
+| T-003-a1p0 | 161 | rc=0 |
+| T-004-a1p0 | 687 | rc=0 |
+| T-005-a1p0 | 196 | rc=0 |
+| T-005-sfix | 628 | rc=0 |
+| T-006-a1p0 | 546 | rc=0 |
+| T-006-sfix | 797 | rc=0 |
+| T-007-a1p0 | 298 | rc=0 |
+| T-008-a1p0 | 878 | rc=0 |
+| T-009-a1p0 | 446 | rc=0 |
+| T-009-sfix | 1400 | rc=0 |
+| T-010-a1p0 | 585 | rc=0 |
+| T-011-a1p0 | 1277 | rc=0 |
+| T-012-a1p0 | 860 | rc=0 |
+| T-012-a1p1 | 653 | rc=0 |
+| T-012-sfix | 2702 | rc=124 |
+| T-013-a1p0 | 1412 | rc=0 |
+| T-014-a1p0 | 1970 | rc=0 |
+| phaseD-a1p0 | 559 | rc=0 |
 
 - Escalations (KPI, from supervisor events): 0 (untested: 0)
 
 ## Classified events
 
 ```
-     11 success
-      4 sensor_red_post_commit
+     28 success
+      9 sensor_red_post_commit
       4 escalated
+      2 slow_session
+      2 pipeline_succeeded
       1 story_gate_pass
-      1 pipeline_succeeded
+      1 sensor_red_at_entry
+      1 orphan_worker
+      1 acceptance_pass
 ```
