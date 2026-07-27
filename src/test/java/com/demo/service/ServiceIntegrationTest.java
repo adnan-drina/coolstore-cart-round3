@@ -287,8 +287,8 @@ class ServiceIntegrationTest {
         cartService.addItem("dedup-cart", "1111", 2);
         cartService.addItem("dedup-cart", "1111", 3);
         
-        ShoppingCart cart = cartService.getShoppingCart("dedup-cart");
-        
+        ShoppingCart cart = cartService.getShoppingCart("dedup-cart").orElseThrow();
+
         // Should have single item with accumulated quantity (5)
         assertThat(cart.getShoppingCartItemList()).hasSize(1);
         assertThat(cart.getShoppingCartItemList().get(0).getQuantity()).isEqualTo(5);

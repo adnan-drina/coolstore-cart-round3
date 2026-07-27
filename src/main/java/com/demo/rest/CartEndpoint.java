@@ -14,6 +14,8 @@ import jakarta.ws.rs.core.Response;
 import com.demo.model.ShoppingCart;
 import com.demo.service.ShoppingCartService;
 
+import java.util.Optional;
+
 @Path("/api/cart")
 @ApplicationScoped
 public class CartEndpoint {
@@ -28,8 +30,12 @@ public class CartEndpoint {
     @GET
     @Path("/{cartId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ShoppingCart getCart(@PathParam("cartId") String cartId) {
-        return shoppingCartService.getShoppingCart(cartId);
+    public Response getCart(@PathParam("cartId") String cartId) {
+        Optional<ShoppingCart> cart = shoppingCartService.getShoppingCart(cartId);
+        if (cart.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        return Response.ok(cart.get()).build();
     }
 
     @POST

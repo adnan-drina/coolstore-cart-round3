@@ -32,15 +32,11 @@ class CompleteIntegrationTest {
 
     @Test
     void should_complete_full_cart_lifecycle() {
-        // 1. Start with empty cart
+        // 1. GET on non-existent cart returns 404 (T-003 idempotency)
         given()
             .when().get("/api/cart/" + CART_ID)
             .then()
-            .statusCode(200)
-            .body("cartId", equalTo(CART_ID))
-            .body("cartItemTotal", equalTo(0.0F))
-            .body("cartTotal", equalTo(0.0F))
-            .body("shoppingCartItemList", empty());
+            .statusCode(404);
 
         // 2. Add item - Car ($1000)
         given()
@@ -341,9 +337,9 @@ class CompleteIntegrationTest {
      */
     @Test
     void should_validate_jaxrs_endpoints_registered() {
-        // All JAX-RS endpoints must be registered and accessible
+        // GET on non-existent cart returns 404 (T-003 idempotency)
         given().when().get("/api/cart/jaxrs-test")
-            .then().statusCode(200);
+            .then().statusCode(404);
 
         given()
             .pathParam("cartId", "jaxrs-test")
@@ -416,12 +412,11 @@ class CompleteIntegrationTest {
      */
     @Test
     void should_validate_http_endpoints_accessible() {
-        // REST API returns JSON
+        // REST API - GET on non-existent cart returns 404 (T-003 idempotency)
         given()
             .when().get("/api/cart/http-test")
             .then()
-            .statusCode(200)
-            .contentType("application/json");
+            .statusCode(404);
 
         // Index returns HTML
         given()

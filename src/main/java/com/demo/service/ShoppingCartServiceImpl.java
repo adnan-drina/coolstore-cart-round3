@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -59,14 +60,13 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
 
     @Override
-    public ShoppingCart getShoppingCart(String cartId) {
-        return carts.compute(cartId, (id, existing) -> {
-            if (existing == null) {
-                existing = new ShoppingCart(cartId);
-            }
-            priceShoppingCart(existing);
-            return existing;
-        });
+    public Optional<ShoppingCart> getShoppingCart(String cartId) {
+        ShoppingCart existing = carts.get(cartId);
+        if (existing == null) {
+            return Optional.empty();
+        }
+        priceShoppingCart(existing);
+        return Optional.of(existing);
     }
 
     @Override
@@ -132,7 +132,12 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     public ShoppingCart deleteItem(String cartId, String itemId, int quantity) {
         List<ShoppingCartItem> toRemoveList = new ArrayList<>();
 
-        ShoppingCart cart = getShoppingCart(cartId);
+        ShoppingCart cart = carts.compute(cartId, (id, existing) -> {
+            if (existing == null) {
+                return new ShoppingCart(cartId);
+            }
+            return existing;
+        });
 
         cart.getShoppingCartItemList().stream()
                 .filter(sci -> sci.getProduct().getItemId().equals(itemId))
@@ -167,7 +172,12 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     public ShoppingCart addItem(String cartId, String itemId, int quantity) {
-        ShoppingCart cart = getShoppingCart(cartId);
+        ShoppingCart cart = carts.compute(cartId, (id, existing) -> {
+            if (existing == null) {
+                return new ShoppingCart(cartId);
+            }
+            return existing;
+        });
         Product product = getProduct(itemId);
 
         if (product == null) {

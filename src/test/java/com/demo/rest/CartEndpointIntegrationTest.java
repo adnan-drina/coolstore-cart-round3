@@ -21,20 +21,23 @@ class CartEndpointIntegrationTest {
     private static final String ITEM_ID_2 = "2222";
 
     @Test
-    void getCart_returnsEmptyCartForNewCartId() {
+    void getCart_returns404ForMissingCart() {
         given()
-            .when().get("/api/cart/new-cart")
+            .when().get("/api/cart/nonexistent-cart")
             .then()
-            .statusCode(200)
-            .contentType("application/json")
-            .body("cartId", equalTo("new-cart"))
-            .body("cartItemTotal", equalTo(0.0F))
-            .body("cartTotal", equalTo(0.0F))
-            .body("shoppingCartItemList", empty());
+            .statusCode(404);
     }
 
     @Test
     void getCart_returnsJsonContentType() {
+        given()
+            .pathParam("cartId", CART_ID)
+            .pathParam("itemId", ITEM_ID)
+            .pathParam("quantity", 1)
+            .when().post("/api/cart/{cartId}/{itemId}/{quantity}")
+            .then()
+            .statusCode(200);
+
         given()
             .when().get("/api/cart/{cartId}", CART_ID)
             .then()
@@ -227,13 +230,19 @@ class CartEndpointIntegrationTest {
             .pathParam("cartId", "test-cart")
             .when().get("/api/cart/{cartId}")
             .then()
-            .statusCode(200);
+            .statusCode(404);
 
         given()
             .pathParam("cartId", "test-cart")
             .pathParam("itemId", ITEM_ID)
             .pathParam("quantity", 1)
             .when().post("/api/cart/{cartId}/{itemId}/{quantity}")
+            .then()
+            .statusCode(200);
+
+        given()
+            .pathParam("cartId", "test-cart")
+            .when().get("/api/cart/{cartId}")
             .then()
             .statusCode(200);
 

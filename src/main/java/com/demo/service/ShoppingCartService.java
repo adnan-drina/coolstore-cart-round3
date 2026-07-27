@@ -1,11 +1,13 @@
 package com.demo.service;
 
+import java.util.Optional;
+
 import com.demo.model.Product;
 import com.demo.model.ShoppingCart;
 
 public interface ShoppingCartService {
 
-    ShoppingCart getShoppingCart(String cartId);
+    Optional<ShoppingCart> getShoppingCart(String cartId);
 
     Product getProduct(String itemId);
 
