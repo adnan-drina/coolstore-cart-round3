@@ -101,7 +101,7 @@ This specification documents the domain model layer migration for the Coolstore 
 
 ## Out-of-Scope Boundaries
 
-**Not Migrated in S01** (owned by S02/S03):
+**Not Migrated in S01** (owned by S02):
 - Service layer: `ShoppingCartServiceImpl`, `PromoService`, `ShippingService`
 - REST endpoint: `CartEndpoint` 
 - Application bootstrap: `CartServiceApplication`, `JerseyConfig`

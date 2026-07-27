@@ -57,7 +57,7 @@ Following dependency-order.md:16-29:
 2. **Product** second (god node, fan-in: 3) - characterization tests early  
 3. **ShoppingCartItem** third
 4. **Promotion** fourth
-5. Application and config classes (CartServiceApplication, JerseyConfig) - owned by S03
+5. Application and config classes (CartServiceApplication, JerseyConfig) - owned by S02
 
 ## Test Strategy
 
