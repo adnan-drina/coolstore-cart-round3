@@ -17,3 +17,13 @@ analysis:
   # analysis AND the supervisor's kantra fallback.
   source: springboot
   targets: [quarkus, cloud-readiness, openjdk17]
+preserve:
+  # Enforced: plan-lint maps each item to a task; the preflight sensor
+  # greps them in src/main|pom|k8s. Erasing one is a functional
+  # regression no unit test catches (run #1 lesson).
+  - CATALOG_ENDPOINT
+forbidden:
+  # Fabrication tripwires (run #2 T-027): sensors fail any commit that
+  # introduces these into src/main.
+  - getMockProducts
+  - "Fallback to mock"
