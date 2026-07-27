@@ -135,7 +135,8 @@ class ServiceIntegrationTest {
     }
 
     /**
-     * Test cart operations: add, remove, checkout.
+     * Test adding and removing items from cart.
+     * Validates that items can be added and completely removed.
      */
     @Test
     void should_handle_cart_operations_correctly() {
@@ -168,6 +169,7 @@ class ServiceIntegrationTest {
 
     /**
      * Test checkout operation clears cart but maintains pricing calculations.
+     * Validates that checkout resets items to zero while preserving calculation logic.
      */
     @Test
     void should_clear_cart_on_checkout_with_pricing() {
@@ -233,6 +235,7 @@ class ServiceIntegrationTest {
 
     /**
      * Test error handling for invalid cart operations.
+     * Verifies graceful handling when attempting to add non-existent products.
      */
     @Test
     void should_handle_invalid_cart_operations_gracefully() {

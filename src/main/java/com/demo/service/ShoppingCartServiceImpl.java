@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -154,7 +155,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         Product product = getProduct(itemId);
 
         if (product == null) {
-            LOG.warning(INVALID_PRODUCT_MSG.formatted(itemId));
+            LOG.warning(() -> String.format(INVALID_PRODUCT_MSG, itemId));
             return cart;
         }
 
@@ -195,23 +196,24 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
 
     List<ShoppingCartItem> dedupeCartItems(ShoppingCart sc) {
-        List<ShoppingCartItem> result = new ArrayList<>();
         Map<String, Integer> quantityMap = new HashMap<>();
         for (ShoppingCartItem sci : sc.getShoppingCartItemList()) {
             quantityMap.merge(sci.getProduct().getItemId(), sci.getQuantity(), Integer::sum);
         }
 
-        for (String itemId : quantityMap.keySet()) {
-            Product p = getProduct(itemId);
-            if (p != null) {
-                ShoppingCartItem newItem = new ShoppingCartItem();
-                newItem.setQuantity(quantityMap.get(itemId));
-                newItem.setPrice(p.getPrice());
-                newItem.setProduct(p);
-                result.add(newItem);
-            }
-        }
-
-        return result;
+        return quantityMap.entrySet().stream()
+            .map(entry -> {
+                Product p = getProduct(entry.getKey());
+                if (p != null) {
+                    ShoppingCartItem newItem = new ShoppingCartItem();
+                    newItem.setQuantity(entry.getValue());
+                    newItem.setPrice(p.getPrice());
+                    newItem.setProduct(p);
+                    return newItem;
+                }
+                return null;
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 }
