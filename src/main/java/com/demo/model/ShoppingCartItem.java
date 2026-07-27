@@ -3,54 +3,56 @@ package com.demo.model;
 import java.io.Serializable;
 
 public class ShoppingCartItem implements Serializable {
+	
+	private static final long serialVersionUID = 6964558044240061049L;
 
-	private static final long serialVersionUID = -1234567890123456789L;
-	private String productId;
+	private double price;
 	private int quantity;
-	private double unitPrice;
+	private double promoSavings;
+	private Product product;
 	
 	public ShoppingCartItem() {
 		
 	}
 	
-	public ShoppingCartItem(String productId, int quantity, double unitPrice) {
-		this.productId = productId;
-		this.quantity = quantity;
-		this.unitPrice = unitPrice;
+	public double getPrice() {
+		return price;
 	}
-	
-	public String getProductId() {
-		return productId;
+
+	public void setPrice(double price) {
+		this.price = price;
 	}
-	
-	public void setProductId(String productId) {
-		this.productId = productId;
+
+	public Product getProduct() {
+		return product;
 	}
-	
+
+	public void setProduct(Product product) {
+		this.product = product;
+	}
+
 	public int getQuantity() {
 		return quantity;
 	}
-	
+
 	public void setQuantity(int quantity) {
 		this.quantity = quantity;
 	}
-	
-	public double getUnitPrice() {
-		return unitPrice;
+
+	public double getPromoSavings() {
+		return promoSavings;
 	}
-	
-	public void setUnitPrice(double unitPrice) {
-		this.unitPrice = unitPrice;
+
+	public void setPromoSavings(double promoSavings) {
+		this.promoSavings = promoSavings;
 	}
-	
-	public double getTotalPrice() {
-		return quantity * unitPrice;
-	}
-	
+
 	@Override
 	public String toString() {
-		return "ShoppingCartItem [productId=" + productId + ", quantity=" 
-				+ quantity + ", unitPrice=" + unitPrice + "]";
+		return "ShoppingCartItem [price=" + price + ", quantity=" + quantity
+				+ ", promoSavings=" + promoSavings + ", product=" + product
+				+ "]";
 	}
+		
 	
 }
