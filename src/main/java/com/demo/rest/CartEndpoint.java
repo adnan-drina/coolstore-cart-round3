@@ -9,6 +9,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import com.demo.model.ShoppingCart;
 import com.demo.service.ShoppingCartService;
@@ -62,5 +63,11 @@ public class CartEndpoint {
     @Produces(MediaType.APPLICATION_JSON)
     public ShoppingCart checkout(@PathParam("cartId") String cartId) {
         return shoppingCartService.checkout(cartId);
+    }
+
+    @POST
+    @Path("/acceptance-check")
+    public Response acceptanceCheck() {
+        return Response.ok().entity("{\"status\": \"ok\"}").build();
     }
 }

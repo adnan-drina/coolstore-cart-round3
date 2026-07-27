@@ -44,3 +44,5 @@ T-001|rewrite|1|SUCCESS|CartServiceApplication.java,application.properties
 T-005|infer|1|SUCCESS|src/main/java/com/demo/service/ShippingService.java
 T-006|infer|1|SUCCESS|CatalogService.java, application.properties, pom.xml
 | T-007 | infer | 1 | completed | ShoppingCartService.java, ShoppingCartServiceImpl.java |
+|T-008 | infer | 1 attempt | SUCCESS | src/main/java/com/demo/rest/CartEndpoint.java created |
+| T-009 | infer | 1 | SUCCESS | src/main/java/com/demo/rest/CartEndpoint.java (acceptance-check endpoint added) |
