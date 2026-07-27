@@ -1,10 +1,11 @@
 package com.redhat.coolstore.service;
 
+import java.util.Optional;
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.model.ShoppingCart;
 
 public interface ShoppingCartService {
-    ShoppingCart getShoppingCart(String cartId);
+    Optional<ShoppingCart> getShoppingCart(String cartId);
 
     Product getProduct(String itemId);
 
