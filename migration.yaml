@@ -1,0 +1,19 @@
+# Migration provenance record — stamped by the app-migration template.
+# The legacy application is intentionally NOT registered in the catalog;
+# this file is the durable record of where the migration started.
+migration:
+  legacyRepoUrl: https://github.com/adnan-drina/coolstore-cart-legacy.git
+  target: quarkus
+  provisionedBy: app-migration golden-path template
+acceptance:
+  # The harness supervisor asserts this after deploy (Phase E success).
+  path: /api/cart/acceptance-check
+  needsDatabase: false
+analysis:
+  # MTA rule selection is LABEL FILTERING (--source/--target pick only
+  # matching rules; everything else is silently excluded). The decided
+  # set for this platform: the migration path itself, cloud-readiness
+  # (we deploy to OpenShift), and the JDK jump. Applies to the IDE
+  # analysis AND the supervisor's kantra fallback.
+  source: springboot
+  targets: [quarkus, cloud-readiness, openjdk17]
