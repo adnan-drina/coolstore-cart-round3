@@ -7,13 +7,13 @@ Appended by the Hermes orchestrator after every task (see
 |---|---|---|---|---|
 | T-001 | rewrite | 1 | resolved-by-scaffold | pom.xml |
 | T-002 | rewrite | 1 | completed | src/main/java/com/demo/model/ShoppingCart.java, src/main/java/com/demo/model/ShoppingCartItem.java |
-| T-003 | infer | 1 | completed | src/main/java/com/demo/model/Product.java
+| T-003 | infer | 1 | completed | src/main/java/com/demo/model/Product.java |
 | T-006 | infer | 1 | completed | migration/integrations/T-006-integration-contracts.md, migration/integrations/test-patterns-legacy-compatibility.md |
 | T-004: Package Migration for ShoppingCartItem | Class: rewrite | Attempts: 1 | Result: SUCCESS | Files: src/main/java/com/demo/model/ShoppingCartItem.java |
 | T-005: Package Migration for Promotion | Class: rewrite | Attempts: 1 | Result: SUCCESS | Files: src/main/java/com/demo/model/Promotion.java |
 | T-007: Characterization Tests for ShoppingCart Pricing Behavior | Class: infer | Attempts: 1 | Result: ESCALATED | Files: src/test/java/com/demo/model/ShoppingCartPricingTest.java, pom.xml |
 | T-009: Product Model Characterization Tests | Class: infer | Attempts: 1 | Result: ESCALATED | Files: src/test/java/com/demo/model/ProductTest.java |
-T-010|infer|1|SUCCESS|ModelIntegrationTest.java
+| T-010|infer|1|SUCCESS|ModelIntegrationTest.java
 
 ## Phase D: Re-analysis and Final Status
 
@@ -40,9 +40,11 @@ T-010|infer|1|SUCCESS|ModelIntegrationTest.java
 T-001 | rewrite | 1 | SUCCESS | CartServiceApplication.java, application.properties
 T-001|rewrite|1|SUCCESS|CartServiceApplication.java,application.properties
 || T-002 | rewrite | 1 | SUCCESS | pom.xml (BOM conventions, Failsafe plugin, native profile)
-| T-004 | infer | 1 | SUCCESS | src/main/java/com/demo/service/PromoService.java |
-T-005|infer|1|SUCCESS|src/main/java/com/demo/service/ShippingService.java
-T-006|infer|1|SUCCESS|CatalogService.java, application.properties, pom.xml
-| T-007 | infer | 1 | completed | ShoppingCartService.java, ShoppingCartServiceImpl.java |
-|T-008 | infer | 1 attempt | SUCCESS | src/main/java/com/demo/rest/CartEndpoint.java created |
-| T-009 | infer | 1 | SUCCESS | src/main/java/com/demo/rest/CartEndpoint.java (acceptance-check endpoint added) |
+|| T-004 | infer | 1 | SUCCESS | src/main/java/com/demo/service/PromoService.java |
+|T-005|infer|1|SUCCESS|src/main/java/com/demo/service/ShippingService.java
+|T-006|infer|1|SUCCESS|CatalogService.java, application.properties, pom.xml
+|| T-007 | infer | 1 | completed | ShoppingCartService.java, ShoppingCartServiceImpl.java |
+||T-008 | infer | 1 attempt | SUCCESS | src/main/java/com/demo/rest/CartEndpoint.java created |
+|| T-009 | infer | 1 | SUCCESS | src/main/java/com/demo/rest/CartEndpoint.java (acceptance-check endpoint added) |
+|| T-011 | infer | 1 | completed | src/test/java/com/demo/service/ServiceIntegrationTest.java |
+| T-012 | infer | 1 | SUCCESS | src/test/java/com/demo/rest/CartEndpointIntegrationTest.java, src/test/java/com/demo/rest/TestCatalogService.java, src/test/java/com/demo/rest/MockCatalogServiceResource.java, src/test/resources/application.properties, src/main/resources/application.properties |
