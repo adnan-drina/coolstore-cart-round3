@@ -39,4 +39,6 @@ T-010|infer|1|SUCCESS|ModelIntegrationTest.java
 **Remaining Technical Debt**: None in current scope - the escalated characterization tests represent future enhancements, not migration blockers.
 T-001 | rewrite | 1 | SUCCESS | CartServiceApplication.java, application.properties
 T-001|rewrite|1|SUCCESS|CartServiceApplication.java,application.properties
-| T-002 | rewrite | 1 | SUCCESS | pom.xml (BOM conventions, Failsafe plugin, native profile)
+|| T-002 | rewrite | 1 | SUCCESS | pom.xml (BOM conventions, Failsafe plugin, native profile)
+| T-004 | infer | 1 | SUCCESS | src/main/java/com/demo/service/PromoService.java |
+T-005|infer|1|SUCCESS|src/main/java/com/demo/service/ShippingService.java
