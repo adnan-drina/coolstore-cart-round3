@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import com.demo.model.Product;
 import com.demo.model.ShoppingCart;
@@ -39,7 +40,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Inject
     public ShoppingCartServiceImpl(
             ShippingService shippingService,
-            CatalogService catalogService,
+            @RestClient CatalogService catalogService,
             PromoService promoService) {
         this.shippingService = shippingService;
         this.catalogService = catalogService;
