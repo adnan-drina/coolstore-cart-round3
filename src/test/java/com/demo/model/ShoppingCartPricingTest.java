@@ -9,17 +9,17 @@ import static org.assertj.core.api.Assertions.assertThat;
  * These tests pin the legacy pricing assertions from ShoppingCartServiceTest
  * to ensure migration preserves the exact business logic.
  */
-public class ShoppingCartPricingTest {
+class ShoppingCartPricingTest {
 
     private ShoppingCart shoppingCart;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         shoppingCart = new ShoppingCart("1");
     }
 
     @Test
-    public void should_have_zero_totals_for_empty_cart() {
+    void should_have_zero_totals_for_empty_cart() {
         assertThat(shoppingCart)
             .returns(0.0, ShoppingCart::getCartItemPromoSavings)
             .returns(0.0, ShoppingCart::getCartItemTotal)
@@ -28,15 +28,15 @@ public class ShoppingCartPricingTest {
     }
 
     @Test
-    public void should_calculate_price_of_cart_with_multiple_items() {
+    void should_calculate_price_of_cart_with_multiple_items() {
         // Setup: Create cart with 2x $1000 items (legacy test scenario)
-        final ShoppingCart shoppingCart = TestObjects.createCartWithTwoThousandDollars();
+        ShoppingCart testCart = TestObjects.createCartWithTwoThousandDollars();
         
         // Execute: Apply pricing logic (simulating priceShoppingCart service call)
-        TestObjects.applyPricingLogic(shoppingCart);
+        TestObjects.applyPricingLogic(testCart);
 
         // Assert: Pin exact legacy assertion values
-        assertThat(shoppingCart)
+        assertThat(testCart)
             .returns(0.0, ShoppingCart::getCartItemPromoSavings)
             .returns(2000.0, ShoppingCart::getCartItemTotal)
             .returns(-10.99, ShoppingCart::getShippingPromoSavings)
@@ -44,34 +44,34 @@ public class ShoppingCartPricingTest {
     }
 
     @Test
-    public void should_preserve_cart_item_total_calculation() {
+    void should_preserve_cart_item_total_calculation() {
         // Test specific cart item total calculation logic
-        final ShoppingCart shoppingCart = TestObjects.createCartWithTwoThousandDollars();
+        ShoppingCart testCart = TestObjects.createCartWithTwoThousandDollars();
         
         // Simulate pricing calculation for cart items
-        TestObjects.applyPricingLogic(shoppingCart);
+        TestObjects.applyPricingLogic(testCart);
         
-        assertThat(shoppingCart.getCartItemTotal())
+        assertThat(testCart.getCartItemTotal())
             .isEqualTo(2000.0);
     }
 
     @Test
-    public void should_apply_shipping_promotion_correctly() {
+    void should_apply_shipping_promotion_correctly() {
         // Test shipping promotion logic (free shipping over $75)
-        final ShoppingCart shoppingCart = TestObjects.createCartWithTwoThousandDollars();
+        ShoppingCart testCart = TestObjects.createCartWithTwoThousandDollars();
         
         // First apply pricing logic to set cart item total
-        TestObjects.applyPricingLogic(shoppingCart);
+        TestObjects.applyPricingLogic(testCart);
         
         // Then apply shipping calculation
-        TestObjects.applyShippingCalculation(shoppingCart);
+        TestObjects.applyShippingCalculation(testCart);
         
-        assertThat(shoppingCart.getShippingPromoSavings())
+        assertThat(testCart.getShippingPromoSavings())
             .isEqualTo(-10.99);
     }
 
     @Test
-    public void should_maintain_product_data_preservation() {
+    void should_maintain_product_data_preservation() {
         // Ensure Product constructor signature preserved: Product(String itemId, String name, String desc, double price)
         Product testProduct = new Product("1111", "Car", "Super car", 1000);
         
@@ -83,7 +83,7 @@ public class ShoppingCartPricingTest {
     }
 
     @Test
-    public void should_validate_shopping_cart_item_integration() {
+    void should_validate_shopping_cart_item_integration() {
         // Test ShoppingCartItem integration with Product
         Product testProduct = new Product("1111", "Car", "Super car", 1000);
         ShoppingCartItem cartItem = new ShoppingCartItem();
