@@ -9,7 +9,7 @@
 Convert Spring Boot application to Quarkus bootstrap:
 
 **File Paths Changed**: 
-- `src/main/java/com/redhat/coolstore/CartServiceApplication.java` → `src/main/java/com/demo/CartServiceApplication.java`
+-  → DELETED (decided mapping: Quarkus has no main class; @SpringBootApplication bootstrap is removed, not converted)
 - `src/main/resources/application.properties` → `src/main/resources/application.properties`
 
 **Annotations**: 
@@ -18,7 +18,6 @@ Convert Spring Boot application to Quarkus bootstrap:
 
 1. OpenRewrite recipe execution on CartServiceApplication
 2. Remove `@SpringBootApplication` annotation
-3. Convert to Quarkus main class if needed:
    ```java
    public class CartServiceApplication {
        public static void main(String[] args) {
@@ -33,7 +32,7 @@ Convert Spring Boot application to Quarkus bootstrap:
    quarkus.application.name=coolstore-cart
    quarkus.http.port=8080
    quarkus.smallrye-health.enabled=true
-   catalog.endpoint=${CATALOG_ENDPOINT:http://localhost:8081}
+   # (catalog client config arrives at T-006 as quarkus.rest-client.catalogService.url — never catalog.endpoint) ${CATALOG_ENDPOINT:http://localhost:8081}
    ```
 
 ## T-002: Resolve POM Debt from S01
