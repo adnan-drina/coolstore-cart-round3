@@ -157,11 +157,10 @@ class ServiceCharacterizationTest {
         // - Default promotion "329299" with 0.25 discount
         Set<Promotion> defaultPromotions = TestObjects.getDefaultPromotions();
         
-        assertThat(defaultPromotions.size()).isEqualTo(1);
-        
         Promotion promotion = defaultPromotions.iterator().next();
-        assertThat(promotion.getItemId()).isEqualTo("329299");
-        assertThat(promotion.getPercentOff()).isEqualTo(0.25);
+        assertThat(promotion)
+            .extracting(Promotion::getItemId, Promotion::getPercentOff)
+            .containsExactly("329299", 0.25);
     }
 
     @Test
