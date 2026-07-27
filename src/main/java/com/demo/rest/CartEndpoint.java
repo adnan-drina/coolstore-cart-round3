@@ -37,7 +37,7 @@ public class CartEndpoint {
     @Produces(MediaType.APPLICATION_JSON)
     public ShoppingCart add(@PathParam("cartId") String cartId,
                             @PathParam("itemId") String itemId,
-                            @PathParam("quantity") int quantity) throws Exception {
+                            @PathParam("quantity") int quantity) {
         return shoppingCartService.addItem(cartId, itemId, quantity);
     }
 
@@ -45,7 +45,7 @@ public class CartEndpoint {
     @Path("/{cartId}/{tmpId}")
     @Produces(MediaType.APPLICATION_JSON)
     public ShoppingCart set(@PathParam("cartId") String cartId,
-                            @PathParam("tmpId") String tmpId) throws Exception {
+                            @PathParam("tmpId") String tmpId) {
         return shoppingCartService.set(cartId, tmpId);
     }
 
@@ -54,7 +54,7 @@ public class CartEndpoint {
     @Produces(MediaType.APPLICATION_JSON)
     public ShoppingCart delete(@PathParam("cartId") String cartId,
                                @PathParam("itemId") String itemId,
-                               @PathParam("quantity") int quantity) throws Exception {
+                               @PathParam("quantity") int quantity) {
         return shoppingCartService.deleteItem(cartId, itemId, quantity);
     }
 

@@ -67,11 +67,12 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         return cart;
     }
 
+    @Override
     public void priceShoppingCart(ShoppingCart sc) {
         if (sc != null) {
             initShoppingCartForPricing(sc);
 
-            if (sc.getShoppingCartItemList() != null && sc.getShoppingCartItemList().size() > 0) {
+            if (sc.getShoppingCartItemList() != null && !sc.getShoppingCartItemList().isEmpty()) {
                 promoService.applyCartItemPromotions(sc);
 
                 for (ShoppingCartItem sci : sc.getShoppingCartItemList()) {
@@ -189,12 +190,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             cart.setShoppingCartItemList(tmpCart.getShoppingCartItemList());
         }
 
-        try {
-            priceShoppingCart(cart);
-            cart.setShoppingCartItemList(dedupeCartItems(cart));
-        } catch (Exception ex) {
-            throw ex;
-        }
+        priceShoppingCart(cart);
+        cart.setShoppingCartItemList(dedupeCartItems(cart));
 
         carts.put(cartId, cart);
         return cart;
