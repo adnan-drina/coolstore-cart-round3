@@ -24,7 +24,7 @@ import com.demo.model.ShoppingCartItem;
  *
  * <p>Migrated from Spring Boot {@code @Service} to Quarkus CDI
  * {@code @ApplicationScoped} with constructor injection. Cart state lives in a
- * local {@link HashMap}; pricing uses {@link PromoService} and
+ * local {@link ConcurrentHashMap}; pricing uses {@link PromoService} and
  * {@link ShippingService}.</p>
  */
 @ApplicationScoped
@@ -32,13 +32,15 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     private static final Logger LOG = Logger.getLogger(ShoppingCartServiceImpl.class.getName());
     private static final String INVALID_PRODUCT_MSG = "Invalid product %s request to get added to the shopping cart. No product added";
+    private static final long CATALOG_REFRESH_MS = 60_000;
 
     private final ShippingService shippingService;
     private final CatalogService catalogService;
     private final PromoService promoService;
 
     private ConcurrentHashMap<String, ShoppingCart> carts;
-    private final Map<String, Product> productMap = new HashMap<>();
+    private final ConcurrentHashMap<String, Product> productMap = new ConcurrentHashMap<>();
+    private volatile long lastCatalogRefresh = 0;
 
     @Inject
     public ShoppingCartServiceImpl(
@@ -111,11 +113,16 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Override
     public Product getProduct(String itemId) {
         if (!productMap.containsKey(itemId)) {
+            long now = System.currentTimeMillis();
+            if (now - lastCatalogRefresh < CATALOG_REFRESH_MS) {
+                return null;
+            }
             // Legacy contract: catalog failures propagate — never a
             // fabricated fallback (migration.yaml forbidden:).
             List<Product> products = catalogService.products();
-            productMap.clear();
-            productMap.putAll(products.stream().collect(Collectors.toMap(Product::getItemId, Function.identity())));
+            products.stream().collect(Collectors.toMap(Product::getItemId, Function.identity()))
+                .forEach(productMap::putIfAbsent);
+            lastCatalogRefresh = now;
         }
 
         return productMap.get(itemId);

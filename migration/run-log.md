@@ -2,6 +2,22 @@
 
 ## Phase C - Task Execution
 
+### T-001: Thread-safe cart storage with ConcurrentHashMap
+- **Class**: infer
+- **Attempts**: 1 (ESCALATED due to worker timeouts)
+- **Result**: SUCCESS
+- **Files Touched**: 
+  - `src/main/java/com/demo/service/ShoppingCartServiceImpl.java` (converted HashMap to ConcurrentHashMap with atomic operations)
+- **Verification**: All tests pass (mvn -q clean test) - thread-safe cart storage with ConcurrentHashMap
+- **Sensors**: Green (sensors.sh task)
+- **Changes**: 
+  - Changed `private Map<String, ShoppingCart> carts` to `private ConcurrentHashMap<String, ShoppingCart> carts`
+  - Replaced all `carts.put(cartId, cart)` calls with `carts.compute(cartId, (id, existing) -> cart)` for atomic updates
+  - Removed synchronized blocks - leveraging ConcurrentHashMap's internal thread-safety
+  - Added import for `java.util.concurrent.ConcurrentHashMap`
+  - Fixed cart ID assignment to use `ShoppingCart(cartId)` constructor for proper cart identity
+  - Updated all methods to use atomic compute operations for thread-safe cart mutations
+
 ### T-014: Complete Integration Testing
 - **Class**: infer
 - **Attempts**: 1
@@ -86,3 +102,18 @@
 - Sonar quality gate: ✅ PASSED  
 - Boot check (Flyway + schema): ✅ PASSED
 - Test coverage: ✅ MAINTAINED
+
+### T-002: Cache policy with 60-second refresh guard
+- **Class**: infer
+- **Attempts**: 1
+- **Result**: SUCCESS
+- **Files Touched**: 
+  - `src/main/java/com/demo/service/ShoppingCartServiceImpl.java` (implemented cache refresh guard with 60-second window)
+- **Verification**: mvn -q clean test passes - cache behavior prevents excessive catalog fetches for missing items within 60s window
+- **Sensors**: Green (sensors.sh task)
+- **Changes**: 
+  - Added `CATALOG_REFRESH_MS = 60_000` constant and `volatile long lastCatalogRefresh` field
+  - Changed `productMap` to `ConcurrentHashMap` for thread safety
+  - `getProduct()` now checks elapsed time before fetching; skips catalog call if <60s since last refresh
+  - Removed `productMap.clear()`; uses `putIfAbsent` to only populate missing entries
+  - Timestamp stored after successful fetch
