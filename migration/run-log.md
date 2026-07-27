@@ -37,3 +37,4 @@ T-010|infer|1|SUCCESS|ModelIntegrationTest.java
 - Build pipeline green across all factory gates
 
 **Remaining Technical Debt**: None in current scope - the escalated characterization tests represent future enhancements, not migration blockers.
+T-001 | rewrite | 1 | SUCCESS | CartServiceApplication.java, application.properties
