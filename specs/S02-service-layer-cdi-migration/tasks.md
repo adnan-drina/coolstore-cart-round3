@@ -6,7 +6,7 @@
 |**Finding References**: springboot-annotations-to-quarkus-00000, springboot-actuator-to-quarkus-0100  
 |**Legacy Files**: `src/main/java/com/redhat/coolstore/CartServiceApplication.java:1-133`
 
-Convert Spring Boot application to Quarkus bootstrap:
+Remove the Spring Boot bootstrap (decided mapping: Quarkus has no main class — CartServiceApplication is DELETED, never converted):
 
 **File Paths Changed**: 
 -  → DELETED (decided mapping: Quarkus has no main class; @SpringBootApplication bootstrap is removed, not converted)
@@ -389,7 +389,6 @@ Create comprehensive service integration tests:
    - Process checkout and cart clearing
 4. Validate shipping calculation edge cases
 5. Test promotion application thresholds
-6. Test external catalog service integration (with mocked responses if needed)
 7. Validate error handling for invalid cart operations
 
 **Test Commands**:
