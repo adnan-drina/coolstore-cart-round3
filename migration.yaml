@@ -15,8 +15,7 @@ analysis:
   # set for this platform: the migration path itself, cloud-readiness
   # (we deploy to OpenShift), and the JDK jump. Applies to the IDE
   # analysis AND the supervisor's kantra fallback.
-  source: springboot
-  targets: [quarkus, cloud-readiness, openjdk17]
+  targets: [quarkus, jakarta-ee9, cloud-readiness, openjdk17]
 preserve:
   # Enforced: plan-lint maps each item to a task; the preflight sensor
   # greps them in src/main|pom|k8s. Erasing one is a functional
