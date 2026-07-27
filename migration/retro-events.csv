@@ -1,0 +1,22 @@
+epoch,stage,attempt,class,action
+1785155586,T-001,1,success,commit
+1785156955,T-002,1,success,commit
+1785157749,T-003,1,success,commit
+1785157783,T-003,1,sensor_red_post_commit,verify
+1785158682,T-004,1,success,commit
+1785159417,T-005,1,success,commit
+1785159694,T-006,1,success,commit
+1785159718,T-006,1,sensor_red_post_commit,verify
+1785161628,T-007,1,success,commit
+1785161628,T-007,1,escalated,kpi
+1785161654,T-007,1,sensor_red_post_commit,verify
+1785163147,T-008,1,success,commit
+1785163147,T-008,1,escalated,kpi
+1785164295,T-009,1,success,commit
+1785164295,T-009,1,escalated,kpi
+1785165292,T-010,1,success,commit
+1785165292,T-010,1,escalated,kpi
+1785165319,T-010,1,sensor_red_post_commit,verify
+1785166028,phaseD,1,success,commit
+1785166206,phaseE,0,pipeline_succeeded,coolstore-cart-round3-push-pt6pf
+1785166206,phaseE,0,story_gate_pass,non-deploy story
