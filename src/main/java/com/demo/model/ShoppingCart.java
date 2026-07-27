@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ShoppingCart implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = -1108043957592113528L;
 
 	private double cartItemTotal;
 
