@@ -29,7 +29,7 @@ public class PromoService implements Serializable {
     }
 
     public void applyCartItemPromotions(ShoppingCart shoppingCart) {
-        if (shoppingCart != null && shoppingCart.getShoppingCartItemList().size() > 0) {
+        if (shoppingCart != null && !shoppingCart.getShoppingCartItemList().isEmpty()) {
             Map<String, Promotion> promoMap = new HashMap<>();
             for (Promotion promo : getPromotions()) {
                 promoMap.put(promo.getItemId(), promo);
@@ -47,11 +47,9 @@ public class PromoService implements Serializable {
     }
 
     public void applyShippingPromotions(ShoppingCart shoppingCart) {
-        if (shoppingCart != null) {
-            if (shoppingCart.getCartItemTotal() >= 75) {
-                shoppingCart.setShippingPromoSavings(shoppingCart.getShippingTotal() * -1);
-                shoppingCart.setShippingTotal(0);
-            }
+        if (shoppingCart != null && shoppingCart.getCartItemTotal() >= 75) {
+            shoppingCart.setShippingPromoSavings(shoppingCart.getShippingTotal() * -1);
+            shoppingCart.setShippingTotal(0);
         }
     }
 

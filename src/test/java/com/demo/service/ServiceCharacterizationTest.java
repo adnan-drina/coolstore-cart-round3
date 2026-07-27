@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 
  * These tests serve as contract specifications that the migrated services must satisfy.
  */
-public class ServiceCharacterizationTest {
+class ServiceCharacterizationTest {
 
     /**
      * Test utility for calculating shipping costs based on cart totals.
@@ -57,9 +57,9 @@ public class ServiceCharacterizationTest {
             return promotions;
         }
     }
-
+    
     @Test
-    public void should_calculate_correct_cart_item_totals() {
+    void should_calculate_correct_cart_item_totals() {
         // This test validates the arithmetic contract:
         // 2x $1000 items = $2000 cart item total
         final ShoppingCart shoppingCart = new ShoppingCart("test-cart");
@@ -78,7 +78,7 @@ public class ServiceCharacterizationTest {
     }
 
     @Test
-    public void should_validate_shipping_tier_boundaries() {
+    void should_validate_shipping_tier_boundaries() {
         // This test pins exact tier boundaries and rates:
         // 0, 25, 50, 75, 100
         // 2.99, 4.99, 6.99, 8.99, 10.99
@@ -98,7 +98,7 @@ public class ServiceCharacterizationTest {
     }
 
     @Test
-    public void should_apply_free_shipping_promotion_above_75() {
+    void should_apply_free_shipping_promotion_above_75() {
         // This test validates promotion composition semantics:
         // - ZEROES shippingTotal (free shipping above $75)
         // - keeps shippingPromoSavings informational
@@ -126,7 +126,7 @@ public class ServiceCharacterizationTest {
     }
 
     @Test
-    public void should_validate_promotion_threshold_boundary() {
+    void should_validate_promotion_threshold_boundary() {
         // Test promotion threshold at exactly $75
         
         // Just below threshold - no promotion
@@ -152,12 +152,11 @@ public class ServiceCharacterizationTest {
     }
 
     @Test
-    public void should_validate_default_promotion_set() {
+    void should_validate_default_promotion_set() {
         // This test validates the PromoService promotion set:
         // - Default promotion "329299" with 0.25 discount
         Set<Promotion> defaultPromotions = TestObjects.getDefaultPromotions();
         
-        assertThat(defaultPromotions).isNotNull();
         assertThat(defaultPromotions.size()).isEqualTo(1);
         
         Promotion promotion = defaultPromotions.iterator().next();
@@ -166,7 +165,7 @@ public class ServiceCharacterizationTest {
     }
 
     @Test
-    public void should_validate_complete_cart_calculation_scenario() {
+    void should_validate_complete_cart_calculation_scenario() {
         // This test validates the complete scenario from legacy tests:
         // 2x $1000 items = $2000 cart item total
         // Shipping promotion -$10.99 (free shipping above $75)

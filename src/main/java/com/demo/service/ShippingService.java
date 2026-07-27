@@ -10,6 +10,7 @@ public class ShippingService {
 
     @Inject
     public ShippingService() {
+        // Quarkus CDI constructor injection
     }
 
     public void calculateShipping(ShoppingCart sc) {
