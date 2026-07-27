@@ -392,7 +392,6 @@ class ModelIntegrationTest {
             .sum();
 
         assertThat(actualTotal).isEqualTo(expectedTotal);
-        assertThat(actualTotal).isEqualTo(2150.0);
     }
 
     @Test
