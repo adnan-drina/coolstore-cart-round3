@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -36,7 +37,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     private final CatalogService catalogService;
     private final PromoService promoService;
 
-    private Map<String, ShoppingCart> carts;
+    private ConcurrentHashMap<String, ShoppingCart> carts;
     private final Map<String, Product> productMap = new HashMap<>();
 
     @Inject
@@ -52,15 +53,18 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @PostConstruct
     public void init() {
         LOG.info("Using local in-memory cache for cart data");
-        carts = new HashMap<>();
+        carts = new ConcurrentHashMap<>();
     }
 
     @Override
     public ShoppingCart getShoppingCart(String cartId) {
-        ShoppingCart cart = carts.computeIfAbsent(cartId, ShoppingCart::new);
-        priceShoppingCart(cart);
-        carts.put(cartId, cart);
-        return cart;
+        return carts.compute(cartId, (id, existing) -> {
+            if (existing == null) {
+                existing = new ShoppingCart(cartId);
+            }
+            priceShoppingCart(existing);
+            return existing;
+        });
     }
 
     @Override
@@ -135,17 +139,22 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         toRemoveList.forEach(cart::removeShoppingCartItem);
         priceShoppingCart(cart);
-        carts.put(cartId, cart);
-
+        carts.compute(cartId, (id, existing) -> cart);
         return cart;
     }
 
     @Override
     public ShoppingCart checkout(String cartId) {
-        ShoppingCart cart = getShoppingCart(cartId);
-        cart.resetShoppingCartItemList();
-        priceShoppingCart(cart);
-        carts.put(cartId, cart);
+        ShoppingCart cart = carts.compute(cartId, (id, existing) -> {
+            if (existing != null) {
+                existing.resetShoppingCartItemList();
+                return existing;
+            }
+            return null;
+        });
+        if (cart != null) {
+            priceShoppingCart(cart);
+        }
         return cart;
     }
 
@@ -166,33 +175,44 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         cart.addShoppingCartItem(sci);
 
         try {
-            priceShoppingCart(cart);
-            cart.setShoppingCartItemList(dedupeCartItems(cart));
+            carts.compute(cartId, (id, existing) -> {
+                priceShoppingCart(cart);
+                cart.setShoppingCartItemList(dedupeCartItems(cart));
+                return cart;
+            });
         } catch (Exception ex) {
             cart.removeShoppingCartItem(sci);
             throw ex;
         }
 
-        carts.put(cartId, cart);
         return cart;
     }
 
     @Override
     public ShoppingCart set(String cartId, String tmpId) {
-
-        ShoppingCart cart = getShoppingCart(cartId);
-        ShoppingCart tmpCart = getShoppingCart(tmpId);
-
+        ShoppingCart tmpCart = carts.get(tmpId);
         if (tmpCart != null) {
-            cart.resetShoppingCartItemList();
-            cart.setShoppingCartItemList(tmpCart.getShoppingCartItemList());
+            // Ensure target cart exists
+            ShoppingCart targetCart = carts.compute(cartId, (id, existing) -> {
+                if (existing == null) {
+                    existing = new ShoppingCart(cartId);
+                }
+                existing.resetShoppingCartItemList();
+                existing.setShoppingCartItemList(new ArrayList<>(tmpCart.getShoppingCartItemList()));
+                priceShoppingCart(existing);
+                return existing;
+            });
+            return targetCart;
+        } else {
+            // Return existing cart or create new one if temp doesn't exist
+            return carts.compute(cartId, (id, existing) -> {
+                if (existing == null) {
+                    existing = new ShoppingCart(cartId);
+                }
+                priceShoppingCart(existing);
+                return existing;
+            });
         }
-
-        priceShoppingCart(cart);
-        cart.setShoppingCartItemList(dedupeCartItems(cart));
-
-        carts.put(cartId, cart);
-        return cart;
     }
 
     List<ShoppingCartItem> dedupeCartItems(ShoppingCart sc) {
