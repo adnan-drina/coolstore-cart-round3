@@ -114,15 +114,6 @@
           </systemPropertyVariables>
         </configuration>
       </plugin>
-      <plugin>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <version>${surefire-plugin.version}</version>
-        <configuration>
-          <systemPropertyVariables>
-            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-          </systemPropertyVariables>
-        </configuration>
-      </plugin>
       <!-- Coverage for plain JUnit tests (quarkus-jacoco only instruments
            @QuarkusTest runs). report binds to prepare-package so it fires
            under the factory's `mvn package` as well as `mvn verify`. -->
@@ -147,31 +138,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>native</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>${quarkus.platform.group-id}</groupId>
-            <artifactId>quarkus-maven-plugin</artifactId>
-            <version>${quarkus.platform.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>build</goal>
-                  <goal>generate-code</goal>
-                  <goal>generate-code-tests</goal>
-                </goals>
-                <configuration>
-                  <quarkus.profile>native</quarkus.profile>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>
