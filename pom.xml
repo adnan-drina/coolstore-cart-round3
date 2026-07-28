@@ -15,6 +15,12 @@
         with Drools/KIE Decision Server and Infinispan Data Grid surfaces removed.
     </description>
 
+    <parent>
+        <groupId>com.redhat.quarkus.platform</groupId>
+        <artifactId>quarkus-bom</artifactId>
+        <version>3.27.3.SP1-redhat-00002</version>
+    </parent>
+
     <properties>
         <compiler-plugin.version>3.14.0</compiler-plugin.version>
         <maven.compiler.release>21</maven.compiler.release>
@@ -43,18 +49,6 @@
             <snapshots><enabled>false</enabled></snapshots>
         </pluginRepository>
     </pluginRepositories>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>${quarkus.platform.group-id}</groupId>
-                <artifactId>${quarkus.platform.artifact-id}</artifactId>
-                <version>${quarkus.platform.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <dependency>
