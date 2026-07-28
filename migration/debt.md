@@ -1,8 +1,3 @@
 # Migration debt ledger
 
-Unresolved sensor REDs recorded by the supervisor: each is a defect that
-survived its fix session. The M5 ship gate blocks on fidelity/package debt.
-
-## T-007 — milestone RED
-- head: 857c43a
-- reason: sensor-fix committed but milestone still RED
+All prior sensor-RED entries resolved at the S02 green ship (b6955ea). New unresolved REDs are appended below by the supervisor.
