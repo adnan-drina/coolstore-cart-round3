@@ -26,29 +26,41 @@ public class ServiceExceptionMapper implements ExceptionMapper<Exception> {
      * RFC 7807 Problem Details JSON structure
      */
     private static class ProblemDetails {
-        @XmlElement(required = true)
-        public String type = "about:blank";
+        private static final String TYPE_DEFAULT = "about:blank";
         
         @XmlElement(required = true)
-        public String title;
+        public final String type;
         
         @XmlElement(required = true)
-        public int status;
+        public final String title;
         
         @XmlElement(required = true)
-        public String detail;
+        public final int status;
         
-        public String instance;
+        @XmlElement(required = true)
+        public final String detail;
+        
+        @XmlElement(required = true)
+        public final String instance;
 
-        public ProblemDetails() {}
+        public ProblemDetails() {
+            this.type = TYPE_DEFAULT;
+            this.title = "";
+            this.status = 0;
+            this.detail = "";
+            this.instance = "";
+        }
 
         public ProblemDetails(String title, int status, String detail) {
+            this.type = TYPE_DEFAULT;
             this.title = title;
             this.status = status;
             this.detail = detail;
+            this.instance = "";
         }
 
         public ProblemDetails(String title, int status, String detail, String instance) {
+            this.type = TYPE_DEFAULT;
             this.title = title;
             this.status = status;
             this.detail = detail;
@@ -61,8 +73,8 @@ public class ServiceExceptionMapper implements ExceptionMapper<Exception> {
      */
     @Override
     public Response toResponse(Exception exception) {
-        if (exception instanceof ConstraintViolationException) {
-            return handleConstraintViolation((ConstraintViolationException) exception);
+        if (exception instanceof ConstraintViolationException violationException) {
+            return handleConstraintViolation(violationException);
         }
         
         // Handle ProcessingException (catalog service failures) to 503 Service Unavailable
@@ -82,12 +94,13 @@ public class ServiceExceptionMapper implements ExceptionMapper<Exception> {
             cause = cause.getCause();
         }
         
-        if (isProcessingError || exception.getClass().getName().contains("Processing")) {
-            return handleServiceUnavailable(exception);
+        if (isProcessingError || 
+            (exception != null && exception.getClass().getName().contains("Processing"))) {
+            return handleServiceUnavailable();
         }
         
         // Default: map to 500 Internal Server Error with generic message (never raw stack traces)
-        return handleInternalServerError(exception);
+        return handleInternalServerError();
     }
 
     private Response handleConstraintViolation(ConstraintViolationException violationException) {
@@ -111,7 +124,7 @@ public class ServiceExceptionMapper implements ExceptionMapper<Exception> {
                 .build();
     }
 
-    private Response handleServiceUnavailable(Exception exception) {
+    private Response handleServiceUnavailable() {
         ProblemDetails problemDetails = new ProblemDetails(
                 "Service Unavailable", 
                 503, 
@@ -124,7 +137,7 @@ public class ServiceExceptionMapper implements ExceptionMapper<Exception> {
                 .build();
     }
 
-    private Response handleInternalServerError(Exception exception) {
+    private Response handleInternalServerError() {
         // Never expose raw stack traces
         ProblemDetails problemDetails = new ProblemDetails(
                 "Internal Server Error", 
@@ -148,7 +161,7 @@ public class ServiceExceptionMapper implements ExceptionMapper<Exception> {
         json.put("status", problemDetails.status);
         json.put("detail", problemDetails.detail);
         
-        if (problemDetails.instance != null) {
+        if (!problemDetails.instance.isEmpty()) {
             json.put("instance", problemDetails.instance);
         }
         

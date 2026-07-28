@@ -210,7 +210,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         ShoppingCart tmpCart = carts.get(tmpId);
         if (tmpCart != null) {
             // Ensure target cart exists
-            ShoppingCart targetCart = carts.compute(cartId, (id, existing) -> {
+            return carts.compute(cartId, (id, existing) -> {
                 if (existing == null) {
                     existing = new ShoppingCart(cartId);
                 }
@@ -219,7 +219,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                 priceShoppingCart(existing);
                 return existing;
             });
-            return targetCart;
         } else {
             // Return existing cart or create new one if temp doesn't exist
             return carts.compute(cartId, (id, existing) -> {
