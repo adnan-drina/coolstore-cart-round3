@@ -1,17 +1,23 @@
 package com.demo.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.io.Serializable;
 
+@Entity
+@Table(name = "product")
 public class Product implements Serializable {
 
 	private static final long serialVersionUID = -7304814269819778382L;
+	@Id
 	private String itemId;
 	private String name;
 	private String desc;
 	private double price;
 	
 	public Product() {
-		// Default constructor for JPA/serialization
+		
 	}
 	
 	public Product(String itemId, String name, String desc, double price) {
