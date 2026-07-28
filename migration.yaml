@@ -4,6 +4,8 @@
 migration:
   legacyRepoUrl: https://github.com/adnan-drina/coolstore-cart-legacy.git
   target: quarkus
+  legacyPackage: com.redhat.coolstore
+  targetPackage: com.demo
   provisionedBy: app-migration golden-path template
 acceptance:
   # The harness supervisor asserts this after deploy (Phase E success).
