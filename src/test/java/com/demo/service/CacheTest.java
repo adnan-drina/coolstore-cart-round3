@@ -1,12 +1,11 @@
 package com.demo.service;
 
-import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
-
-import jakarta.inject.Inject;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Cache behavior test for missing product IDs.
