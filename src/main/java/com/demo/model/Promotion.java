@@ -1,15 +1,8 @@
 package com.demo.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "promotion")
 public class Promotion {
 
 	private String itemId;
-	@Id
 	
 	private double percentOff;
 

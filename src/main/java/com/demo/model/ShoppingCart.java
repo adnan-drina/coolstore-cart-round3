@@ -4,32 +4,23 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "SHOPPING_CART")
 public class ShoppingCart implements Serializable {
 
 	private static final long serialVersionUID = -1108043957592113528L;
 
-	@Id
-	@Column(name = "CART_ID")
-	private String cartId;
-
-	@OneToMany(mappedBy = "shoppingCart", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<ShoppingCartItem> shoppingCartItemList = new ArrayList<>();
-
-	// Pricing fields
 	private double cartItemTotal;
+
 	private double cartItemPromoSavings;
+	
 	private double shippingTotal;
+	
 	private double shippingPromoSavings;
+	
 	private double cartTotal;
+
+	private String cartId;
+			
+	private List<ShoppingCartItem> shoppingCartItemList = new ArrayList<ShoppingCartItem>();
 
 	public ShoppingCart() {
 	}
@@ -55,21 +46,31 @@ public class ShoppingCart implements Serializable {
 	}
 
 	public void resetShoppingCartItemList() {
-		shoppingCartItemList = new ArrayList<>();
-	}
+		shoppingCartItemList = new ArrayList<ShoppingCartItem>();
+  }
 
 	public void addShoppingCartItem(ShoppingCartItem sci) {
-		if (sci != null) {
+		
+		if ( sci != null ) {
+			
 			shoppingCartItemList.add(sci);
+			
 		}
+		
 	}
-
+	
 	public boolean removeShoppingCartItem(ShoppingCartItem sci) {
+		
 		boolean removed = false;
-		if (sci != null) {
+		
+		if ( sci != null ) {
+			
 			removed = shoppingCartItemList.remove(sci);
+			
 		}
+		
 		return removed;
+		
 	}
 
 	public double getCartItemTotal() {
@@ -114,10 +115,13 @@ public class ShoppingCart implements Serializable {
 
 	@Override
 	public String toString() {
-		return "ShoppingCart [cartId=" + cartId + ", cartItemTotal=" + cartItemTotal
-				+ ", cartItemPromoSavings=" + cartItemPromoSavings + ", shippingTotal=" + shippingTotal
-				+ ", shippingPromoSavings=" + shippingPromoSavings + ", cartTotal=" + cartTotal
-				+ ", shoppingCartItemList=" + shoppingCartItemList + "]";
+		return "ShoppingCart [cartId=" + cartId
+				+ ", cartItemTotal=" + cartItemTotal
+				+ ", cartItemPromoSavings=" + cartItemPromoSavings
+				+ ", shippingTotal=" + shippingTotal
+				+ ", shippingPromoSavings=" + shippingPromoSavings
+				+ ", cartTotal=" + cartTotal + ", shoppingCartItemList="
+				+ shoppingCartItemList + "]";
 	}
-
+	
 }
