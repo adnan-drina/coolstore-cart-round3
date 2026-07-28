@@ -101,8 +101,14 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Override
     public Product getProduct(String itemId) {
         if (!productMap.containsKey(itemId)) {
-            List<Product> products = catalogService.products();
-            productMap = products.stream().collect(Collectors.toMap(Product::getItemId, Function.identity()));
+            try {
+                List<Product> products = catalogService.products();
+                productMap = products.stream().collect(Collectors.toMap(Product::getItemId, Function.identity()));
+            } catch (Exception e) {
+                // Catalog service not available - return null to indicate product lookup failed
+                LOG.warn("Catalog service not available for product lookup: {}", e.getMessage());
+                return null;
+            }
         }
 
         return productMap.get(itemId);

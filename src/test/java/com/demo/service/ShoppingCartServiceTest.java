@@ -3,9 +3,12 @@ package com.demo.service;
 import com.demo.model.Product;
 import com.demo.model.ShoppingCart;
 import com.demo.model.ShoppingCartItem;
+import com.demo.ProductsObjectMother;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
