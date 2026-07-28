@@ -145,3 +145,5 @@ Checkable, story-scoped:
 - Integration tests pass with new error handling contracts
 - Deploy milestone: factory pipeline green, deployed, `/q/health` serves, `/api/cart/*` endpoints functional
 - Migration complete - all findings resolved
+
+**Evidence-based update (S01 completion)**: Platform foundation provides quarkus-rest dependency. JAX-RS conversion from Spring @RestController can proceed. GET→404 idempotency contract implementation enabled by platform modernization completed in S01.

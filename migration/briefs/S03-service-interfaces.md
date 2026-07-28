@@ -116,3 +116,5 @@ Checkable, story-scoped:
 - Interface methods preserved exactly - no behavioral changes
 - Implementation classes (S04) can compile against these interfaces
 - Environment-driven configuration test passes (catalog service URL configurable)
+
+**Evidence-based update (S01 completion)**: Platform foundation provides quarkus-rest dependency. CatalogService redesign can proceed with quarkus-rest-client integration. Environment-driven configuration patterns established via S01 platform work.

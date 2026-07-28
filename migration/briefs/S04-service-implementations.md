@@ -145,3 +145,5 @@ Checkable, story-scoped:
 - Business logic behavior preserved: cart totals, promotions, shipping tiers
 - Characterization tests added for contract gaps (catalog errors, input validation, concurrency)
 - Service layer compiles and functions independently of REST layer
+
+**Evidence-based update (S01 completion)**: Platform foundation enables CDI @ApplicationScoped conversion. Service implementations can convert from Spring @Autowired to CDI constructor injection. Thread-safe patterns (ConcurrentHashMap) validated in S01 approach.

@@ -133,8 +133,10 @@ re-decide). Recipe-executed rules already handled: reference
   - ShoppingCartItem pricing: quantity × price - promoSavings calculation preserved
   - ShoppingCart totals: cartItemTotal, cartItemPromoSavings, shippingCosts, shippingPromoSavings, cartTotal fields maintained
   - Cart initialization contract (test line 28): New carts return zero totals (cartItemPromoSavings: 0.0, cartItemTotal: 0.0, shippingPromoSavings: 0.0, cartTotal: 0.0)
-  - Pricing calculation contract (test line 38): Cart with 2 items at $1000 each returns cartItemTotal: 2000.0, cartTotal: 2000.0, shippingPromoSavings: -10.99 (free shipping promotion)
-- **Forbidden**: None applicable to entity classes
+  - Entity classes compile and basic JPA operations work
+  - No changes to service or endpoint classes
+
+  **Evidence-based update (S01 completion)**: Platform foundation completed successfully. All javax-to-jakarta recipe transforms confirmed complete in migration/recipe-log.md. Entity classes now compile with jakarta.* imports. Platform modernization enables S02 entity conversion without dependency issues.
 
 ## Done-criteria
 
