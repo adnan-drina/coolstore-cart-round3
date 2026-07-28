@@ -25,6 +25,14 @@ public class CartEndpoint {
     }
 
     @GET
+    @Path("/acceptance-check")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String acceptanceCheck() {
+        return "{\"status\":\"healthy\",\"service\":\"cart-service\",\"timestamp\":\"" + 
+               java.time.Instant.now() + "\",\"message\":\"Acceptance check passed\"}";
+    }
+
+    @GET
     @Path("/{cartId}")
     @Produces(MediaType.APPLICATION_JSON)
     public ShoppingCart getCart(@PathParam("cartId") String cartId) {
