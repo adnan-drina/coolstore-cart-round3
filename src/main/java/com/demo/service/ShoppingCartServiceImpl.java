@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -46,15 +47,15 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     public ShoppingCart getShoppingCart(String cartId) {
-        if (carts.get(cartId) == null) {
-            ShoppingCart cart = new ShoppingCart(cartId);
-            carts.put(cartId, cart);
-            return cart;
-        }
-
+        Objects.requireNonNull(cartId, "cartId cannot be null");
         ShoppingCart cart = carts.get(cartId);
-        priceShoppingCart(cart);
-        carts.put(cartId, cart);
+        if (Objects.isNull(cart)) {
+            cart = new ShoppingCart(cartId);
+            carts.put(cartId, cart);
+        } else {
+            priceShoppingCart(cart);
+            carts.put(cartId, cart);
+        }
         return cart;
     }
 
