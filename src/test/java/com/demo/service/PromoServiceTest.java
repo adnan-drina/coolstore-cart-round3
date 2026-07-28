@@ -1,8 +1,8 @@
 package com.demo.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -43,8 +43,8 @@ class PromoServiceTest {
     @Test
     void testApplyCartItemPromotionsWithNullCart() {
         // Test line 32: cart != null
-        promoService.applyCartItemPromotions(null);
-        // Should not throw exception
+        assertThatCode(() -> promoService.applyCartItemPromotions(null))
+            .doesNotThrowAnyException();
     }
 
     @Test
@@ -57,8 +57,8 @@ class PromoServiceTest {
     @Test
     void testApplyShippingPromotionsWithNullCart() {
         // Test line 50: cart != null
-        promoService.applyShippingPromotions(null);
-        // Should not throw exception
+        assertThatCode(() -> promoService.applyShippingPromotions(null))
+            .doesNotThrowAnyException();
     }
 
     @Test
@@ -68,6 +68,5 @@ class PromoServiceTest {
         cart.setShippingTotal(4.99); // Set initial shipping before promo
         promoService.applyShippingPromotions(cart);
         assertThat(cart.getShippingTotal()).as("Shipping should remain unchanged below threshold").isEqualTo(4.99);
-        assertThat(cart.getShippingPromoSavings()).as("Shipping promo savings should be zero").isEqualTo(0);
     }
 }

@@ -2,10 +2,6 @@ package com.demo.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.demo.model.Product;
-import com.demo.model.ShoppingCart;
-import com.demo.model.ShoppingCartItem;
-
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;

@@ -111,6 +111,16 @@ class CacheTest {
         // Multiple cart reads should not affect behavior
         var cart = cartService.getShoppingCart("cache-test-cart");
         assertThat(cart.isPresent()).isTrue();
+    }
+
+    @Test
+    void should_preserve_cache_behavior_after_cart_access() {
+        // Test that cache behavior persists after cart operations
+        
+        final String MISSING_ITEM = "7777";
+        
+        // First, establish cache baseline
+        cartService.addItem("cache-test-cart", "1111", 1);
         
         // Verify cache behavior persists
         var finalCached = cartService.getProduct(MISSING_ITEM);
@@ -160,19 +170,52 @@ class CacheTest {
     }
 
     @Test
-    void should_work_with_concurrent_missing_requests() throws InterruptedException {
-        // Test cache behavior under concurrent missing product requests - all return null
+    void should_complete_concurrent_requests_within_timeout() throws InterruptedException {
+        // Test that concurrent cache requests complete within timeout
         
-        final String CONCURRENT_MISSING_ID = "concurrent-missing";
+        final String CONCURRENT_MISSING_ID = "concurrent-missing-timeout";
+        final int threadCount = 10;
+        final java.util.concurrent.CountDownLatch startLatch = new java.util.concurrent.CountDownLatch(1);
+        final java.util.concurrent.CountDownLatch finishLatch = new java.util.concurrent.CountDownLatch(threadCount);
+        final java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(threadCount);
+        
+        // Establish that missing items return null
+        var initialResult = cartService.getProduct(CONCURRENT_MISSING_ID);
+        assertThat(initialResult).isNull(); // Characterize actual behavior
+        
+        // Launch concurrent requests
+        for (int i = 0; i < threadCount; i++) {
+            executor.submit(() -> {
+                try {
+                    startLatch.await();
+                    
+                    // Each thread makes a single request
+                    var result = cartService.getProduct(CONCURRENT_MISSING_ID);
+                } catch (Exception e) {
+                    // Concurrent access might have issues
+                } finally {
+                    finishLatch.countDown();
+                }
+            });
+        }
+        
+        startLatch.countDown();
+        boolean finished = finishLatch.await(30, java.util.concurrent.TimeUnit.SECONDS);
+        executor.shutdown();
+        
+        assertThat(finished).as("All concurrent cache requests should complete").isTrue();
+    }
+
+    @Test
+    void should_return_null_for_concurrent_missing_requests() throws InterruptedException {
+        // Test that concurrent missing requests consistently return null
+        
+        final String CONCURRENT_MISSING_ID = "concurrent-missing-null";
         final int threadCount = 10;
         final java.util.concurrent.CountDownLatch startLatch = new java.util.concurrent.CountDownLatch(1);
         final java.util.concurrent.CountDownLatch finishLatch = new java.util.concurrent.CountDownLatch(threadCount);
         final java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(threadCount);
         final java.util.concurrent.atomic.AtomicInteger successCount = new java.util.concurrent.atomic.AtomicInteger(0);
-        
-        // Establish that missing items return null
-        var initialResult = cartService.getProduct(CONCURRENT_MISSING_ID);
-        assertThat(initialResult).isNull(); // Characterize actual behavior
         
         // Launch concurrent requests
         for (int i = 0; i < threadCount; i++) {
@@ -186,7 +229,7 @@ class CacheTest {
                         if (result == null) { // Missing products return null
                             successCount.incrementAndGet();
                         }
-                        Thread.sleep(5); // Small delay between requests
+                        // Removed Thread.sleep - not essential for test correctness
                     }
                 } catch (Exception e) {
                     // Concurrent access might have issues, but null behavior should persist
@@ -197,10 +240,9 @@ class CacheTest {
         }
         
         startLatch.countDown();
-        boolean finished = finishLatch.await(30, java.util.concurrent.TimeUnit.SECONDS);
+        finishLatch.await(30, java.util.concurrent.TimeUnit.SECONDS);
         executor.shutdown();
         
-        assertThat(finished).as("All concurrent cache requests should complete").isTrue();
         assertThat(successCount.get()).as("Most concurrent requests should return null for missing products").isGreaterThan(threadCount * 8);
     }
 }

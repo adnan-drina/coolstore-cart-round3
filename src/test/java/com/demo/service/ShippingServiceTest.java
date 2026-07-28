@@ -1,6 +1,7 @@
 package com.demo.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,8 +27,8 @@ class ShippingServiceTest {
     @Test
     void testCalculateShippingWithNullCart() {
         // Test null cart handling (line 17)
-        shippingService.calculateShipping(null);
-        // Should not throw exception - test passes if no exception is thrown
+        assertThatCode(() -> shippingService.calculateShipping(null))
+            .doesNotThrowAnyException();
     }
 
     @ParameterizedTest
