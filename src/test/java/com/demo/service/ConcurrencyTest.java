@@ -113,7 +113,7 @@ class ConcurrencyTest {
                                 var cart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
                                 if (cart.isPresent()) {
                                     var shoppingCart = cart.get();
-                                    assertThat(shoppingCart.getCartTotal()).isGreaterThanOrEqualTo(0);
+                                    assertThat(shoppingCart.getCartTotal()).isNotNegative();
                                 }
                                 // Removed Thread.sleep - delays not essential for test
                             }
@@ -150,7 +150,7 @@ class ConcurrencyTest {
         finishLatch.await(30, TimeUnit.SECONDS);
         executor.shutdown();
 
-        assertThat(successCount.get()).as("At least some operations should succeed").isGreaterThan(0);
+        assertThat(successCount.get()).isPositive();
     }
 
     @Test
@@ -174,7 +174,7 @@ class ConcurrencyTest {
             
             // Verify cart totals are reasonable (no corruption)
             double cartItemTotal = shoppingCart.getCartItemTotal();
-            assertThat(cartItemTotal).as("Cart total should be non-negative").isGreaterThanOrEqualTo(0);
+            assertThat(cartItemTotal).isNotNegative();
         }
     }
 
@@ -187,7 +187,7 @@ class ConcurrencyTest {
             var shoppingCart = cart.get();
             
             double cartTotal = shoppingCart.getCartTotal();
-            assertThat(cartTotal).as("Cart total should be non-negative").isGreaterThanOrEqualTo(0);
+            assertThat(cartTotal).isNotNegative();
         }
     }
 
@@ -217,8 +217,8 @@ class ConcurrencyTest {
                             // Just read cart data - should not cause corruption
                             double cartTotal = shoppingCart.getCartTotal();
                             int itemCount = shoppingCart.getShoppingCartItemList().size();
-                            assertThat(cartTotal).isGreaterThanOrEqualTo(0);
-                            assertThat(itemCount).isGreaterThanOrEqualTo(0);
+                            assertThat(cartTotal).isNotNegative();
+                            assertThat(itemCount).isNotNegative();
                             successCount.incrementAndGet();
                         }
                     }
@@ -239,7 +239,7 @@ class ConcurrencyTest {
 
         // Final verification - cart should still be consistent
         var finalCart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
-        assertThat(finalCart.isPresent()).isTrue();
+        assertThat(finalCart).isPresent();
         
         var cart = finalCart.get();
         assertThat(cart.getCartItemTotal()).as("Final cart total should be $2500").isEqualTo(2500.0);
@@ -285,7 +285,7 @@ class ConcurrencyTest {
                                 var cart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
                                 if (cart.isPresent()) {
                                     var shoppingCart = cart.get();
-                                    assertThat(shoppingCart.getCartTotal()).isGreaterThanOrEqualTo(0);
+                                    assertThat(shoppingCart.getCartTotal()).isNotNegative();
                                 }
                                 // Removed Thread.sleep - delays not essential for test
                             }
@@ -325,11 +325,11 @@ class ConcurrencyTest {
         // Final verification - cart should be in a consistent state
         var finalCart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
         // Cart might be empty (checkout) or contain items, but should never be corrupted
-        assertThat(finalCart.isPresent()).isTrue();
+        assertThat(finalCart).isPresent();
         
         var cart = finalCart.get();
-        assertThat(cart.getCartItemTotal()).isGreaterThanOrEqualTo(0);
-        assertThat(cart.getCartTotal()).isGreaterThanOrEqualTo(0);
-        assertThat(cart.getShoppingCartItemList().size()).isGreaterThanOrEqualTo(0);
+        assertThat(cart.getCartItemTotal()).isNotNegative();
+        assertThat(cart.getCartTotal()).isNotNegative();
+        assertThat(cart.getShoppingCartItemList().size()).isNotNegative();
     }
 }

@@ -115,7 +115,7 @@ class CacheTest {
         
         // Multiple cart reads should not affect behavior
         var cart = cartService.getShoppingCart("cache-test-cart");
-        assertThat(cart.isPresent()).isTrue();
+        assertThat(cart).isPresent();
     }
 
     @Test

@@ -44,7 +44,7 @@ class DedupeTest {
         cartService.addItem(DEDUPE_TEST_CART, "1111", 1); // Same Car - quantities accumulate
         
         var cart = cartService.getShoppingCart(DEDUPE_TEST_CART);
-        assertThat(cart.isPresent()).isTrue();
+        assertThat(cart).isPresent();
         
         var shoppingCart = cart.get();
         
@@ -71,7 +71,7 @@ class DedupeTest {
         cartService.addItem(DEDUPE_TEST_CART, "1111", 2); // Car x2
         
         var cart = cartService.getShoppingCart(DEDUPE_TEST_CART);
-        assertThat(cart.isPresent()).isTrue();
+        assertThat(cart).isPresent();
         
         var shoppingCart = cart.get();
         
@@ -94,7 +94,7 @@ class DedupeTest {
         cartService.addItem(DEDUPE_TEST_CART, "2222", 1); // Phone (different item)
         
         var cart = cartService.getShoppingCart(DEDUPE_TEST_CART);
-        assertThat(cart.isPresent()).isTrue();
+        assertThat(cart).isPresent();
         
         var shoppingCart = cart.get();
         
@@ -125,7 +125,7 @@ class DedupeTest {
         cartService.addItem(DEDUPE_TEST_CART, "1111", 1); // Car again (accumulates quantity)
         
         var cart = cartService.getShoppingCart(DEDUPE_TEST_CART);
-        assertThat(cart.isPresent()).isTrue();
+        assertThat(cart).isPresent();
         
         var shoppingCart = cart.get();
         
@@ -151,21 +151,21 @@ class DedupeTest {
         cartService.addItem(DEDUPE_TEST_CART, "1111", 3); // Should become 5
         
         var cart = cartService.getShoppingCart(DEDUPE_TEST_CART);
-        assertThat(cart.isPresent()).isTrue();
+        assertThat(cart).isPresent();
         assertThat(cart.get().getCartItemTotal()).isEqualTo(5000.0);
         
         // Add another item via addItem (since set() has different signature)
         cartService.addItem(DEDUPE_TEST_CART, "1111", 1); // Should set to 6, still deduplicated
         
         var updatedCart = cartService.getShoppingCart(DEDUPE_TEST_CART);
-        assertThat(updatedCart.isPresent()).isTrue();
+        assertThat(updatedCart).isPresent();
         assertThat(updatedCart.get().getCartItemTotal()).isEqualTo(6000.0);
         
         // Add another item
         cartService.addItem(DEDUPE_TEST_CART, "2222", 2); // Phone x2
         
         var finalCart = cartService.getShoppingCart(DEDUPE_TEST_CART);
-        assertThat(finalCart.isPresent()).isTrue();
+        assertThat(finalCart).isPresent();
         
         // Should still be 2 items with correct totals
         assertThat(finalCart.get().getShoppingCartItemList()).hasSize(2);
@@ -182,7 +182,7 @@ class DedupeTest {
         cartService.addItem(DEDUPE_TEST_CART, "1111", 2); // Add 2 more, should become 6
         
         var cart = cartService.getShoppingCart(DEDUPE_TEST_CART);
-        assertThat(cart.isPresent()).isTrue();
+        assertThat(cart).isPresent();
         
         var shoppingCart = cart.get();
         
@@ -203,7 +203,7 @@ class DedupeTest {
         cartService.addItem(DEDUPE_TEST_CART, "1111", 1); // Car (creates separate entry, not deduped)
         
         var cart = cartService.getShoppingCart(DEDUPE_TEST_CART);
-        assertThat(cart.isPresent()).isTrue();
+        assertThat(cart).isPresent();
         
         var shoppingCart = cart.get();
         
@@ -225,7 +225,7 @@ class DedupeTest {
         cartService.addItem(DEDUPE_TEST_CART, "1111", 3); // Car x3 - should result in x5 total
         
         var cart = cartService.getShoppingCart(DEDUPE_TEST_CART);
-        assertThat(cart.isPresent()).isTrue();
+        assertThat(cart).isPresent();
         
         var shoppingCart = cart.get();
         var items = shoppingCart.getShoppingCartItemList();
@@ -246,7 +246,7 @@ class DedupeTest {
         cartService.addItem(DEDUPE_TEST_CART, "1111", 1); // Car
         
         var cart = cartService.getShoppingCart(DEDUPE_TEST_CART);
-        assertThat(cart.isPresent()).isTrue();
+        assertThat(cart).isPresent();
         
         var shoppingCart = cart.get();
         var items = shoppingCart.getShoppingCartItemList();
