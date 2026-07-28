@@ -4,10 +4,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ShoppingCartItemTest {
+class ShoppingCartItemTest {
 
     @Test
-    public void should_initialize_with_defaults() {
+    void should_initialize_with_defaults() {
         ShoppingCartItem item = new ShoppingCartItem();
 
         assertEquals(0.0, item.getPrice());
@@ -17,7 +17,7 @@ public class ShoppingCartItemTest {
     }
 
     @Test
-    public void should_set_and_get_price() {
+    void should_set_and_get_price() {
         ShoppingCartItem item = new ShoppingCartItem();
         item.setPrice(1000.0);
 
@@ -25,7 +25,7 @@ public class ShoppingCartItemTest {
     }
 
     @Test
-    public void should_set_and_get_quantity() {
+    void should_set_and_get_quantity() {
         ShoppingCartItem item = new ShoppingCartItem();
         item.setQuantity(3);
 
@@ -33,7 +33,7 @@ public class ShoppingCartItemTest {
     }
 
     @Test
-    public void should_set_and_get_promoSavings() {
+    void should_set_and_get_promoSavings() {
         ShoppingCartItem item = new ShoppingCartItem();
         item.setPromoSavings(100.0);
 
@@ -41,7 +41,7 @@ public class ShoppingCartItemTest {
     }
 
     @Test
-    public void should_set_and_get_product() {
+    void should_set_and_get_product() {
         ShoppingCartItem item = new ShoppingCartItem();
         Product product = new Product("2222", "Bike", "Mountain bike", 200.0);
         item.setProduct(product);
@@ -53,7 +53,7 @@ public class ShoppingCartItemTest {
     }
 
     @Test
-    public void should_implement_serializable() {
+    void should_implement_serializable() {
         ShoppingCartItem item = new ShoppingCartItem();
         item.setPrice(500.0);
         item.setQuantity(2);
@@ -65,7 +65,7 @@ public class ShoppingCartItemTest {
     }
 
     @Test
-    public void should_produce_toString_with_all_fields() {
+    void should_produce_toString_with_all_fields() {
         ShoppingCartItem item = new ShoppingCartItem();
         item.setPrice(100.0);
         item.setQuantity(1);
@@ -81,7 +81,7 @@ public class ShoppingCartItemTest {
     }
 
     @Test
-    public void should_maintain_product_reference_after_updates() {
+    void should_maintain_product_reference_after_updates() {
         ShoppingCartItem item = new ShoppingCartItem();
         Product product = new Product("2222", "Bike", "Mountain bike", 200.0);
         item.setProduct(product);

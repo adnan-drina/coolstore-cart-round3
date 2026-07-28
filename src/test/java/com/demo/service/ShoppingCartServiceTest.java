@@ -3,7 +3,6 @@ package com.demo.service;
 import com.demo.model.Product;
 import com.demo.model.ShoppingCart;
 import com.demo.model.ShoppingCartItem;
-import com.demo.ProductsObjectMother;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -11,13 +10,13 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
-public class ShoppingCartServiceTest {
+class ShoppingCartServiceTest {
 
     @Inject
     ShoppingCartService shoppingCartService;
 
     @Test
-    public void should_get_initialized_shopping_cart_in_case_of_not_exists() {
+    void should_get_initialized_shopping_cart_in_case_of_not_exists() {
         final ShoppingCart shoppingCart = shoppingCartService.getShoppingCart("1111");
 
         assertEquals(0.0, shoppingCart.getCartItemPromoSavings());
@@ -27,7 +26,7 @@ public class ShoppingCartServiceTest {
     }
 
     @Test
-    public void should_calculate_price_of_cart() {
+    void should_calculate_price_of_cart() {
         final ShoppingCart shoppingCart = shoppingCartService.getShoppingCart("1");
         ShoppingCartItem sci = new ShoppingCartItem();
         sci.setProduct(new Product("1111", "Car", "Super car", 1000));

@@ -6,21 +6,15 @@ import java.util.List;
 
 public class ShoppingCart implements Serializable {
 
-	private static final long serialVersionUID = -1108043957592113528L;
+    private static final long serialVersionUID = -1108043957592113528L;
 
-	private double cartItemTotal;
-
-	private double cartItemPromoSavings;
-	
-	private double shippingTotal;
-
-	private double shippingPromoSavings;
-
-	private double cartTotal;
-
-	private String cartId;
-			
-	private List<ShoppingCartItem> shoppingCartItemList = new ArrayList<ShoppingCartItem>();
+    private double cartItemTotal;
+    private double cartItemPromoSavings;
+    private double shippingTotal;
+    private double shippingPromoSavings;
+    private double cartTotal;
+    private String cartId;
+    private List<ShoppingCartItem> shoppingCartItemList = new ArrayList<>();
 
 	public ShoppingCart() {
 	}

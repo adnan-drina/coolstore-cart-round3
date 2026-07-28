@@ -1,6 +1,5 @@
 package com.demo.service;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,22 +11,17 @@ import com.demo.model.ShoppingCart;
 import com.demo.model.ShoppingCartItem;
 
 @ApplicationScoped
-public class PromoService implements Serializable {
+public class PromoService {
 
-    private static final long serialVersionUID = 2088590587856645568L;
-
-    private String name = null;
-
-    private Set<Promotion> promotionSet = null;
+    private Set<Promotion> promotionSet = new HashSet<>();
 
     public PromoService() {
-        promotionSet = new HashSet<Promotion>();
         // Coolstore seed item also used by inventory/catalog demos
         promotionSet.add(new Promotion("329299", .25));
     }
 
     public void applyCartItemPromotions(ShoppingCart shoppingCart) {
-        if (shoppingCart != null && shoppingCart.getShoppingCartItemList().size() > 0) {
+        if (shoppingCart != null && !shoppingCart.getShoppingCartItemList().isEmpty()) {
             Map<String, Promotion> promoMap = new HashMap<String, Promotion>();
             for (Promotion promo : getPromotions()) {
                 promoMap.put(promo.getItemId(), promo);
@@ -45,20 +39,14 @@ public class PromoService implements Serializable {
     }
 
     public void applyShippingPromotions(ShoppingCart shoppingCart) {
-        if (shoppingCart != null) {
-            // PROMO: if cart total is greater than 75, free shipping
-            if (shoppingCart.getCartItemTotal() >= 75) {
-                shoppingCart.setShippingPromoSavings(shoppingCart.getShippingTotal() * -1);
-                shoppingCart.setShippingTotal(0);
-            }
+        if (shoppingCart != null && shoppingCart.getCartItemTotal() >= 75) {
+            shoppingCart.setShippingPromoSavings(shoppingCart.getShippingTotal() * -1);
+            shoppingCart.setShippingTotal(0);
         }
     }
 
     public Set<Promotion> getPromotions() {
-        if (promotionSet == null) {
-            promotionSet = new HashSet<Promotion>();
-        }
-        return new HashSet<Promotion>(promotionSet);
+        return promotionSet == null ? new HashSet<>() : new HashSet<>(promotionSet);
     }
 
     public void setPromotions(Set<Promotion> promotionSet) {
@@ -71,6 +59,6 @@ public class PromoService implements Serializable {
 
     @Override
     public String toString() {
-        return "PromoService [name=" + name + ", promotionSet=" + promotionSet + "]";
+        return "PromoService [promotionSet=" + promotionSet + "]";
     }
 }

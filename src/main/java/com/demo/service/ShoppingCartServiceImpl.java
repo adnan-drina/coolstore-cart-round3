@@ -10,9 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-
 @ApplicationScoped
 public class ShoppingCartServiceImpl implements ShoppingCartService {
 
@@ -47,7 +45,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         if (sc != null) {
             initShoppingCartForPricing(sc);
 
-            if (sc.getShoppingCartItemList() != null && sc.getShoppingCartItemList().size() > 0) {
+            if (sc.getShoppingCartItemList() != null && !sc.getShoppingCartItemList().isEmpty()) {
                 promoService.applyCartItemPromotions(sc);
 
                 for (ShoppingCartItem sci : sc.getShoppingCartItemList()) {
