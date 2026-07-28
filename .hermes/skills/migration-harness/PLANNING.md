@@ -75,8 +75,8 @@ every infer body (file mappings/signatures/annotations); the legacy
 user-facing surface (web UI / index page) covered by a task or
 explicitly waived with a reason; every mandatory finding, every
 migration.yaml `preserve:` item, and the migration.yaml
-`acceptance.path` mapped to a task; and no `com.redhat.coolstore`
-package targets (project root is `com.demo`).
+`acceptance.path` mapped to a task; and no legacy-package targets — the
+project root is `migration.yaml` `targetPackage` (never the `legacyPackage`).
 
 **M1 hands you a spec input bundle — consume it, do not re-derive
 it** (docs/MTA-TO-SPEC-MAPPING.md):
@@ -134,6 +134,18 @@ run #2's failures):
   to make it compile, the stray sweep archived them, and the milestone
   broke on a compile error — one wasted session plus a sensor-fix. Order
   test tasks by their widest dependency, not their file type.
+- **A characterization task uses TEST DOUBLES for not-yet-converted
+  REDESIGN types — it NEVER creates the real class in `src/main`.** When a
+  test in story S needs a service/endpoint that a LATER story owns (per
+  architecture-profile §7 / the roadmap), stub it with a Mockito mock or a
+  test-local fake in `src/test`, not by writing `src/main/.../Service.java`.
+  Creating the real later-story class early fabricates it (no harvest
+  source, wrong shape) and poisons the later story, which then "converts"
+  the stub instead of redesigning from the brief. V5 T-004 (S01 models
+  story) invented `CatalogService` + a HashMap `ShoppingCartServiceImpl`
+  to pass its test; fidelity caught it and a fix session then tried to
+  waive the gate. The story-scope sensor now REVERTS an `src/main`
+  REDESIGN class a later story owns — plan the test with doubles instead.
 
 Two task-authoring constraints (from cart run #2):
 
