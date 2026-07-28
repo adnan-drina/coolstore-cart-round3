@@ -46,7 +46,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     public ShoppingCart getShoppingCart(String cartId) {
-        if (!carts.containsKey(cartId)) {
+        if (carts.get(cartId) == null) {
             ShoppingCart cart = new ShoppingCart(cartId);
             carts.put(cartId, cart);
             return cart;
@@ -184,12 +184,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             cart.setShoppingCartItemList(tmpCart.getShoppingCartItemList());
         }
 
-        try {
-            priceShoppingCart(cart);
-            cart.setShoppingCartItemList(dedupeCartItems(cart));
-        } catch (Exception ex) {
-            throw ex;
-        }
+        priceShoppingCart(cart);
+        cart.setShoppingCartItemList(dedupeCartItems(cart));
 
         carts.put(cartId, cart);
         return cart;
@@ -212,10 +208,10 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         }
 
         // Second pass: create new items with preserved products
-        for (String itemId : quantityMap.keySet()) {
-            Product existingProduct = existingProducts.get(itemId);
+        for (Map.Entry<String, Integer> entry : quantityMap.entrySet()) {
+            Product existingProduct = existingProducts.get(entry.getKey());
             ShoppingCartItem newItem = new ShoppingCartItem();
-            newItem.setQuantity(quantityMap.get(itemId));
+            newItem.setQuantity(entry.getValue());
             newItem.setPrice(existingProduct.getPrice());
             newItem.setProduct(existingProduct);
             result.add(newItem);

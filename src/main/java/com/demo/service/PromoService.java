@@ -25,7 +25,7 @@ public class PromoService {
 
     public void applyCartItemPromotions(ShoppingCart shoppingCart) {
         if (shoppingCart != null && !shoppingCart.getShoppingCartItemList().isEmpty()) {
-            Map<String, Promotion> promoMap = new HashMap<String, Promotion>();
+            Map<String, Promotion> promoMap = new HashMap<>();
             for (Promotion promo : getPromotions()) {
                 promoMap.put(promo.getItemId(), promo);
             }
@@ -54,9 +54,9 @@ public class PromoService {
 
     public void setPromotions(Set<Promotion> promotionSet) {
         if (promotionSet != null) {
-            this.promotionSet = new HashSet<Promotion>(promotionSet);
+            this.promotionSet = new HashSet<>(promotionSet);
         } else {
-            this.promotionSet = new HashSet<Promotion>();
+            this.promotionSet = new HashSet<>();
         }
     }
 
