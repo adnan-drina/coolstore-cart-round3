@@ -87,6 +87,10 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         sc.setShippingPromoSavings(0);
         sc.setCartTotal(0);
 
+        if (sc.getShoppingCartItemList() == null) {
+            return;
+        }
+
         for (ShoppingCartItem sci : sc.getShoppingCartItemList()) {
             Product p = getProduct(sci.getProduct().getItemId());
 
