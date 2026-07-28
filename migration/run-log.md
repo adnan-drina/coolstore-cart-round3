@@ -7,4 +7,5 @@ T-018 | infer | 1 attempt | SUCCESS | resolved-by-scaffold - ShippingService alr
 T-019|infer|1|SUCCESS|src/main/java/com/demo/rest/CartEndpoint.java|ESCALATED - Worker didn't create file; implemented directly per migration runbook escalation valve
 |T-020 | infer | 1 attempt | SUCCESS | resolved-by-scaffold - ShoppingCartServiceImpl.java already converted with constructor injection and pricing orchestration
 |T-021 | infer | 1 attempt | SUCCESS | JerseyConfig intentionally dropped - Quarkus auto-discovers @Path resources, manual Jersey ResourceConfig registration unnecessary
-|T-022 | infer | 1 attempt | COMPLETE: No forbidden patterns found | No changes needed
+|T-022 | infer | 1 attempt | COMPLETE: No forbidden patterns found | No changes needed |
+|T-025 | infer | 1 attempt | SUCCESS | Convert localhost HTTP calls to cloud-ready configuration - Replace hardcoded localhost:8081 with ${CATALOG_ENDPOINT:http://catalog-service} environment-driven config, ensuring cloud-readiness for external service calls |
