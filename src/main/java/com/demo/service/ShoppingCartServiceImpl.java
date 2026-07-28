@@ -158,7 +158,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         ShoppingCart cart = getShoppingCart(cartId);
         Product product = getProduct(itemId);
 
-        if (product == null) {
+        if (Objects.isNull(product)) {
             LOG.warn("Invalid product {} request to get added to the shopping cart. No product added", itemId);
             return cart;
         }
