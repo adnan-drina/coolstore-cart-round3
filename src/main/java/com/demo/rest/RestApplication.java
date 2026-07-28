@@ -11,8 +11,8 @@ public class RestApplication extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         Set<Class<?>> classes = new HashSet<>();
-        classes.add(RootEndpoint.class);
         classes.add(CartEndpoint.class);
+        classes.add(RootEndpoint.class);
         return classes;
     }
 }

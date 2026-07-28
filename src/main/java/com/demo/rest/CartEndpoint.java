@@ -28,8 +28,17 @@ public class CartEndpoint {
     @Path("/acceptance-check")
     @Produces(MediaType.APPLICATION_JSON)
     public String acceptanceCheck() {
-        return "{\"status\":\"healthy\",\"service\":\"cart-service\",\"timestamp\":\"" + 
-               java.time.Instant.now() + "\",\"message\":\"Acceptance check passed\"}";
+        // Get real service state - test that the service can create and return a cart
+        ShoppingCart cart = shoppingCartService.getShoppingCart("acceptance-check");
+        
+        return String.format(
+            "{\"status\":\"healthy\",\"service\":\"cart-service\",\"timestamp\":\"%s\"," +
+            "\"cartId\":\"%s\",\"cartTotal\":%.2f," +
+            "\"message\":\"Acceptance check passed - service operational\"}",
+            java.time.Instant.now(),
+            cart.getCartId(),
+            cart.getCartTotal()
+        );
     }
 
     @GET
