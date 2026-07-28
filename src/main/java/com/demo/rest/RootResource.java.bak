@@ -1,0 +1,31 @@
+package com.demo.rest;
+
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
+/**
+ * Root REST resource providing API health and info endpoints.
+ */
+@Path("/")
+public class RootResource {
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response get() {
+        return Response.ok()
+            .entity("{\"status\":\"ok\",\"service\":\"cart\"}")
+            .build();
+    }
+
+    @GET
+    @Path("/health")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response health() {
+        return Response.ok()
+            .entity("{\"status\":\"healthy\"}")
+            .build();
+    }
+}

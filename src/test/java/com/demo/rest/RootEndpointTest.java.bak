@@ -1,0 +1,32 @@
+package com.demo.rest;
+
+import org.junit.jupiter.api.Test;
+import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.RestAssured;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.equalTo;
+
+/**
+ * Test for REST API root endpoints.
+ */
+@QuarkusTest
+class RootEndpointTest {
+
+    @Test
+    void testRootEndpoint() {
+        given()
+            .when().get("/")
+            .then()
+            .statusCode(200)
+            .body("status", equalTo("ok"));
+    }
+
+    @Test
+    void testHealthEndpoint() {
+        given()
+            .when().get("/health")
+            .then()
+            .statusCode(200)
+            .body("status", equalTo("healthy"));
+    }
+}
