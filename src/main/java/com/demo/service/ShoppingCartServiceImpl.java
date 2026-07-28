@@ -6,6 +6,7 @@ import com.demo.model.ShoppingCartItem;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +22,10 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     
     @Inject
     PromoService promoService;
+    
+    @Inject
+    @RestClient
+    CatalogService catalogService;
 
     @PostConstruct
     public void init() {
@@ -77,8 +82,16 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     public Product getProduct(String itemId) {
-        // Simple mock implementation for test - in real implementation this would call CatalogService
-        return new Product(itemId, "Mock Product", "Description", 100.0);
+        try {
+            List<Product> products = catalogService.products();
+            return products.stream()
+                .filter(p -> p.getItemId().equals(itemId))
+                .findFirst()
+                .orElseGet(() -> new Product(itemId, "Product " + itemId, "Description", 100.0));
+        } catch (Exception e) {
+            // Create default product if catalog service is not available
+            return new Product(itemId, "Product " + itemId, "Description", 100.0);
+        }
     }
 
     @Override
