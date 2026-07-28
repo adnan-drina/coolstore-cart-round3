@@ -716,6 +716,35 @@ check "package guard rejects a legacy-package dir under src/main (V5 #3)" 1 "pac
 run_case() { package_fixture; printf 'package com.redhat.coolstore;\npublic class Leak { }\n' > src/main/java/com/demo/Leak.java; SENSOR_ROOT="$FIX" bash "$SENSORS" package; }
 check "package guard rejects a legacy package declaration in src/main (V5 #3)" 1 "package"
 
+run_case() { package_fixture; mkdir -p "src/main/java/com.demo/model"; printf 'package com.demo.model;\npublic class Product { }\n' > "src/main/java/com.demo/model/Product.java"; SENSOR_ROOT="$FIX" bash "$SENSORS" package; }
+check "package guard rejects a dotted package dir under src/main (V5 #3 gap)" 1 "package"
+
+# 69. harvest-from-staging builds a '/'-joined dest (never a dotted dir) and
+#     renames the package — the option-1 durable fix for the path confusion.
+HARVEST_SH="$HARNESS_DIR/../skills/migration-harness/scripts/harvest-from-staging.sh"
+run_case() {
+  mkfix
+  mkdir -p migration/staging/src/main/java/com/redhat/coolstore/model
+  printf 'package com.redhat.coolstore.model;\nimport com.redhat.coolstore.model.Foo;\npublic class Product { }\n' > migration/staging/src/main/java/com/redhat/coolstore/model/Product.java
+  printf 'legacyPackage: com.redhat.coolstore\ntargetPackage: com.demo\n' > migration.yaml
+  bash "$HARVEST_SH" model/Product.java >/dev/null 2>&1
+  { [ -f src/main/java/com/demo/model/Product.java ] && [ ! -d src/main/java/com.demo ] \
+    && grep -q "package com.demo.model" src/main/java/com/demo/model/Product.java \
+    && ! grep -rq "com.redhat.coolstore" src/main/java; } && echo "HARVEST OK slash-path renamed" || echo "FAIL"
+}
+check "harvest-from-staging writes '/'-joined dest + renames package (V5 opt1)" 0 "HARVEST OK"
+
+# 70. parse-roadmap translates legacy scope paths to target (V5 scope-path bug:
+#     the roadmap names classes by legacy path, but src/main is target-package,
+#     so the scope sensor reverted legitimate harvests as out-of-scope).
+run_case() {
+  mkfix
+  printf 'legacyPackage: com.redhat.coolstore\ntargetPackage: com.demo\n' > migration.yaml
+  printf '## S02: models\n- scope: src/main/java/com/redhat/coolstore/model/Product.java, src/main/java/com/redhat/coolstore/model/ShoppingCart.java\n- findings: -\n- deploy: false\n' > r.md
+  python3 "$HARNESS_DIR/parse-roadmap.py" r.md
+}
+check "parse-roadmap translates legacy scope paths to target (V5 scope-path)" 0 "src/main/java/com/demo/model/Product.java src/main/java/com/demo/model/ShoppingCart.java"
+
 echo "----"
 echo "$PASS/$N passed"
 [ "$FAIL" -eq 0 ]
