@@ -50,3 +50,4 @@ VERIFIED: Quarkus 3.27 platform BOM provides Jakarta EE 9+ compatibility foundat
 - Boot validation (Flyway + schema): GREEN ✓
 
 **M5 EVALUATE COMPLETE** - Migration demonstrates significant progress with 54% violation reduction. Remaining findings properly classified for future story ownership or genuine technical debt resolution.
+T-004|rewrite|1|completed|src/main/java/com/demo/model/ShoppingCart.java
