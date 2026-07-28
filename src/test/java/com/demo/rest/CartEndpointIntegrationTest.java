@@ -272,4 +272,65 @@ class CartEndpointIntegrationTest {
             .then()
             .statusCode(200);
     }
+
+    // T-005: Validation and error mapping tests
+    @Test
+    void addItem_negativeQuantity_returns400BadRequest() {
+        given()
+            .pathParam("cartId", "validation-cart")
+            .pathParam("itemId", ITEM_ID)
+            .pathParam("quantity", -1)
+            .when().post("/api/cart/{cartId}/{itemId}/{quantity}")
+            .then()
+            .statusCode(400)
+            .contentType("application/json")
+            .body("title", equalTo("Constraint Violation"))
+            .body("status", equalTo(400))
+            .body("violations[0].message", containsString("must be greater than or equal to 1"));
+    }
+
+    @Test
+    void addItem_zeroQuantity_returns400BadRequest() {
+        given()
+            .pathParam("cartId", "validation-cart-2")
+            .pathParam("itemId", ITEM_ID)
+            .pathParam("quantity", 0)
+            .when().post("/api/cart/{cartId}/{itemId}/{quantity}")
+            .then()
+            .statusCode(400)
+            .contentType("application/json")
+            .body("title", equalTo("Constraint Violation"))
+            .body("status", equalTo(400))
+            .body("violations[0].message", containsString("must be greater than or equal to 1"));
+    }
+
+    @Test
+    void deleteItem_negativeQuantity_returns400BadRequest() {
+        given()
+            .pathParam("cartId", "validation-cart-3")
+            .pathParam("itemId", ITEM_ID)
+            .pathParam("quantity", -5)
+            .when().delete("/api/cart/{cartId}/{itemId}/{quantity}")
+            .then()
+            .statusCode(400)
+            .contentType("application/json")
+            .body("title", equalTo("Constraint Violation"))
+            .body("status", equalTo(400))
+            .body("violations[0].message", containsString("must be greater than or equal to 1"));
+    }
+
+    @Test
+    void deleteItem_zeroQuantity_returns400BadRequest() {
+        given()
+            .pathParam("cartId", "validation-cart-4")
+            .pathParam("itemId", ITEM_ID)
+            .pathParam("quantity", 0)
+            .when().delete("/api/cart/{cartId}/{itemId}/{quantity}")
+            .then()
+            .statusCode(400)
+            .contentType("application/json")
+            .body("title", equalTo("Constraint Violation"))
+            .body("status", equalTo(400))
+            .body("violations[0].message", containsString("must be greater than or equal to 1"));
+    }
 }

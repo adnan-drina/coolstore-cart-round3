@@ -2,6 +2,7 @@ package com.demo.rest;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.validation.constraints.Min;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -43,7 +44,7 @@ public class CartEndpoint {
     @Produces(MediaType.APPLICATION_JSON)
     public ShoppingCart add(@PathParam("cartId") String cartId,
                             @PathParam("itemId") String itemId,
-                            @PathParam("quantity") int quantity) {
+                            @Min(1) @PathParam("quantity") int quantity) {
         return shoppingCartService.addItem(cartId, itemId, quantity);
     }
 
@@ -60,7 +61,7 @@ public class CartEndpoint {
     @Produces(MediaType.APPLICATION_JSON)
     public ShoppingCart delete(@PathParam("cartId") String cartId,
                                @PathParam("itemId") String itemId,
-                               @PathParam("quantity") int quantity) {
+                               @Min(1) @PathParam("quantity") int quantity) {
         return shoppingCartService.deleteItem(cartId, itemId, quantity);
     }
 

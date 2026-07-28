@@ -132,3 +132,4 @@
   - Changed `@POST @Path("/acceptance-check")` to `@GET @Path("/acceptance-check")`
   - Replaced hand-built JSON string `Response.ok().entity("{\"status\": \"ok\"}")` with proper DTO: `Response.ok(java.util.Map.of("status", "ok"))`
   - Updated all tests to use GET instead of POST and validate proper JSON structure
+| T-005 | infer | 1 | COMPLETED | CartEndpoint.java (+@Min validation), ServiceExceptionMapper.java, CartEndpointIntegrationTest.java (+4 validation tests), pom.xml (+validation deps) |
