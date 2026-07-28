@@ -4,6 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -174,23 +179,23 @@ class CacheTest {
         // Test that concurrent cache requests complete within timeout
         
         final String CONCURRENT_MISSING_ID = "concurrent-missing-timeout";
-        final int threadCount = 10;
-        final java.util.concurrent.CountDownLatch startLatch = new java.util.concurrent.CountDownLatch(1);
-        final java.util.concurrent.CountDownLatch finishLatch = new java.util.concurrent.CountDownLatch(threadCount);
-        final java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(threadCount);
+        final int secondTestThreadCount = 10;
+        final CountDownLatch startLatch = new CountDownLatch(1);
+        final CountDownLatch finishLatch = new CountDownLatch(secondTestThreadCount);
+        final ExecutorService executor = Executors.newFixedThreadPool(secondTestThreadCount);
         
         // Establish that missing items return null
         var initialResult = cartService.getProduct(CONCURRENT_MISSING_ID);
         assertThat(initialResult).isNull(); // Characterize actual behavior
         
         // Launch concurrent requests
-        for (int i = 0; i < threadCount; i++) {
+        for (int i = 0; i < secondTestThreadCount; i++) {
             executor.submit(() -> {
                 try {
                     startLatch.await();
                     
                     // Each thread makes a single request
-                    var result = cartService.getProduct(CONCURRENT_MISSING_ID);
+                    cartService.getProduct(CONCURRENT_MISSING_ID);
                 } catch (Exception e) {
                     // Concurrent access might have issues
                 } finally {
@@ -200,7 +205,7 @@ class CacheTest {
         }
         
         startLatch.countDown();
-        boolean finished = finishLatch.await(30, java.util.concurrent.TimeUnit.SECONDS);
+        boolean finished = finishLatch.await(30, TimeUnit.SECONDS);
         executor.shutdown();
         
         assertThat(finished).as("All concurrent cache requests should complete").isTrue();
@@ -212,10 +217,10 @@ class CacheTest {
         
         final String CONCURRENT_MISSING_ID = "concurrent-missing-null";
         final int threadCount = 10;
-        final java.util.concurrent.CountDownLatch startLatch = new java.util.concurrent.CountDownLatch(1);
-        final java.util.concurrent.CountDownLatch finishLatch = new java.util.concurrent.CountDownLatch(threadCount);
-        final java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(threadCount);
-        final java.util.concurrent.atomic.AtomicInteger successCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        final CountDownLatch startLatch = new CountDownLatch(1);
+        final CountDownLatch finishLatch = new CountDownLatch(threadCount);
+        final ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        final AtomicInteger successCount = new AtomicInteger(0);
         
         // Launch concurrent requests
         for (int i = 0; i < threadCount; i++) {
@@ -240,7 +245,7 @@ class CacheTest {
         }
         
         startLatch.countDown();
-        finishLatch.await(30, java.util.concurrent.TimeUnit.SECONDS);
+        finishLatch.await(30, TimeUnit.SECONDS);
         executor.shutdown();
         
         assertThat(successCount.get()).as("Most concurrent requests should return null for missing products").isGreaterThan(threadCount * 8);

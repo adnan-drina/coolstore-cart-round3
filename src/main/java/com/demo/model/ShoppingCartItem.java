@@ -50,7 +50,7 @@ public class ShoppingCartItem implements Serializable {
 	@Override
 	public String toString() {
 		return "ShoppingCartItem [price=" + price + ", quantity=" + quantity
-				+ ", promoSavings=" + promoSavings + ", product=" + product
+				+ ", promoSavings=" + promoSavings + ", product=" + (product != null ? product.getName() : "null")
 				+ "]";
 	}
 		

@@ -121,7 +121,7 @@ public class ShoppingCart implements Serializable {
 				+ ", shippingTotal=" + shippingTotal
 				+ ", shippingPromoSavings=" + shippingPromoSavings
 				+ ", cartTotal=" + cartTotal + ", shoppingCartItemList="
-				+ shoppingCartItemList + "]";
+				+ (shoppingCartItemList != null ? shoppingCartItemList.size() + " items" : "null") + "]";
 	}
 	
 }

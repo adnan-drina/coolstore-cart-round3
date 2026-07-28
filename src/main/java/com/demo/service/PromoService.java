@@ -70,6 +70,6 @@ public class PromoService implements Serializable {
 
     @Override
     public String toString() {
-        return "PromoService [name=" + name + ", promotionSet=" + promotionSet + "]";
+    	return "PromoService [name=" + name + ", promotionSet=" + (promotionSet != null ? promotionSet.size() + " promotions" : "null") + "]";
     }
 }

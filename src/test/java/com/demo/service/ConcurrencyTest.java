@@ -23,15 +23,15 @@ class ConcurrencyTest {
     @Inject
     ShoppingCartService cartService;
 
-    private static final String CONCURRENT_CART_ID = "concurrent-test-cart";
+    private static final String CONCURRENT_OP_CART_ID = "concurrent-test-cart";
 
     @Test
     void should_handle_parallel_add_operations_on_same_cart() throws InterruptedException {
         // Clear any existing cart state by checking if it exists
         try {
-            var cart = cartService.getShoppingCart(CONCURRENT_CART_ID);
+            var cart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
             if (cart.isPresent()) {
-                cartService.checkout(CONCURRENT_CART_ID); // Clear cart via checkout
+                cartService.checkout(CONCURRENT_OP_CART_ID); // Clear cart via checkout
             }
         } catch (Exception e) {
             // Cart doesn't exist, ignore
@@ -56,7 +56,7 @@ class ConcurrencyTest {
                         int quantity = (threadId % 2) + 1; // 1 or 2
                         
                         try {
-                            cartService.addItem(CONCURRENT_CART_ID, itemId, quantity);
+                            cartService.addItem(CONCURRENT_OP_CART_ID, itemId, quantity);
                             successCount.incrementAndGet();
                         } catch (Exception e) {
                             // Some operations might fail due to concurrent state, that's ok
@@ -84,18 +84,17 @@ class ConcurrencyTest {
     void should_complete_successful_concurrent_operations() throws InterruptedException {
         // Test that at least some concurrent operations succeed
         
-        final String CONCURRENT_CART_ID = "concurrent-ops-test-2";
-        final int threadCount = 10;
+        final int secondTestThreadCount = 10;
         final CountDownLatch startLatch = new CountDownLatch(1);
-        final CountDownLatch finishLatch = new CountDownLatch(threadCount);
-        final ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        final CountDownLatch finishLatch = new CountDownLatch(secondTestThreadCount);
+        final ExecutorService executor = Executors.newFixedThreadPool(secondTestThreadCount);
         final AtomicInteger successCount = new AtomicInteger(0);
         
         // Create cart
-        cartService.addItem(CONCURRENT_CART_ID, "1111", 1);
+        cartService.addItem(CONCURRENT_OP_CART_ID, "1111", 1);
         
         // Launch threads with concurrent operations
-        for (int i = 0; i < threadCount; i++) {
+        for (int i = 0; i < secondTestThreadCount; i++) {
             final int threadId = i;
             executor.submit(() -> {
                 try {
@@ -105,29 +104,30 @@ class ConcurrencyTest {
                     switch (threadId % 4) {
                         case 0: // Add operations
                             for (int j = 0; j < 20; j++) {
-                                cartService.addItem(CONCURRENT_CART_ID, String.valueOf((j % 4) + 1), 1);
+                                cartService.addItem(CONCURRENT_OP_CART_ID, String.valueOf((j % 4) + 1), 1);
                                 // Removed Thread.sleep - delays not essential for test
                             }
                             break;
                         case 1: // Read operations
                             for (int j = 0; j < 30; j++) {
-                                var cart = cartService.getShoppingCart(CONCURRENT_CART_ID);
+                                var cart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
                                 if (cart.isPresent()) {
-                                    assertThat(cart.get().getCartTotal()).isGreaterThanOrEqualTo(0);
+                                    var shoppingCart = cart.get();
+                                    assertThat(shoppingCart.getCartTotal()).isGreaterThanOrEqualTo(0);
                                 }
                                 // Removed Thread.sleep - delays not essential for test
                             }
                             break;
                         case 2: // Add operations (replacing set since set() signature is different)
                             for (int j = 0; j < 15; j++) {
-                                cartService.addItem(CONCURRENT_CART_ID, String.valueOf((j % 4) + 1), 1);
+                                cartService.addItem(CONCURRENT_OP_CART_ID, String.valueOf((j % 4) + 1), 1);
                                 // Removed Thread.sleep - delays not essential for test
                             }
                             break;
                         case 3: // Checkout operations
                             for (int j = 0; j < 10; j++) {
                                 try {
-                                    cartService.checkout(CONCURRENT_CART_ID);
+                                    cartService.checkout(CONCURRENT_OP_CART_ID);
                                 } catch (Exception e) {
                                     // Cart might be empty, ignore
                                 }
@@ -157,7 +157,7 @@ class ConcurrencyTest {
     void should_maintain_cart_integrity_after_concurrent_operations() {
         // Verify cart integrity after concurrent operations
         
-        var cart = cartService.getShoppingCart(CONCURRENT_CART_ID);
+        var cart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
         if (cart.isPresent()) {
             var shoppingCart = cart.get();
             assertThat(shoppingCart.getShoppingCartItemList()).as("Cart should have at least some items").hasSizeGreaterThanOrEqualTo(0);
@@ -168,12 +168,13 @@ class ConcurrencyTest {
     void should_preserve_non_negative_cart_totals_after_concurrent_operations() {
         // Verify cart totals remain non-negative after concurrent operations
         
-        var cart = cartService.getShoppingCart(CONCURRENT_CART_ID);
+        var cart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
         if (cart.isPresent()) {
             var shoppingCart = cart.get();
             
             // Verify cart totals are reasonable (no corruption)
-            assertThat(shoppingCart.getCartItemTotal()).as("Cart total should be non-negative").isGreaterThanOrEqualTo(0);
+            double cartItemTotal = shoppingCart.getCartItemTotal();
+            assertThat(cartItemTotal).as("Cart total should be non-negative").isGreaterThanOrEqualTo(0);
         }
     }
 
@@ -181,19 +182,20 @@ class ConcurrencyTest {
     void should_preserve_total_cart_value_after_concurrent_operations() {
         // Verify total cart value remains consistent after concurrent operations
         
-        var cart = cartService.getShoppingCart(CONCURRENT_CART_ID);
+        var cart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
         if (cart.isPresent()) {
             var shoppingCart = cart.get();
             
-            assertThat(shoppingCart.getCartTotal()).as("Cart total should be non-negative").isGreaterThanOrEqualTo(0);
+            double cartTotal = shoppingCart.getCartTotal();
+            assertThat(cartTotal).as("Cart total should be non-negative").isGreaterThanOrEqualTo(0);
         }
     }
 
     @Test
     void should_handle_parallel_price_operations_on_same_cart() throws InterruptedException {
         // Pre-populate cart with known items
-        cartService.addItem(CONCURRENT_CART_ID, "1111", 2); // Car x2 = $2000
-        cartService.addItem(CONCURRENT_CART_ID, "2222", 1); // Phone x1 = $500
+        cartService.addItem(CONCURRENT_OP_CART_ID, "1111", 2); // Car x2 = $2000
+        cartService.addItem(CONCURRENT_OP_CART_ID, "2222", 1); // Phone x1 = $500
 
         final int threadCount = 5;
         final int operationsPerThread = 10;
@@ -209,7 +211,7 @@ class ConcurrencyTest {
                     startLatch.await();
                     
                     for (int j = 0; j < operationsPerThread; j++) {
-                        var cart = cartService.getShoppingCart(CONCURRENT_CART_ID);
+                        var cart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
                         if (cart.isPresent()) {
                             var shoppingCart = cart.get();
                             // Just read cart data - should not cause corruption
@@ -236,7 +238,7 @@ class ConcurrencyTest {
         assertThat(successCount.get()).as("All concurrent reads should succeed").isEqualTo(threadCount * operationsPerThread);
 
         // Final verification - cart should still be consistent
-        var finalCart = cartService.getShoppingCart(CONCURRENT_CART_ID);
+        var finalCart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
         assertThat(finalCart.isPresent()).isTrue();
         
         var cart = finalCart.get();
@@ -246,25 +248,25 @@ class ConcurrencyTest {
         assertThat(cart.getCartTotal()).as("Final cart total should be $2500").isEqualTo(2500.0);
     }
 
-    @Test
     void should_maintain_cart_consistency_under_concurrent_modifications() throws InterruptedException {
         // Clear cart
         try {
-            var cart = cartService.getShoppingCart(CONCURRENT_CART_ID);
+            var cart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
             if (cart.isPresent()) {
-                cartService.checkout(CONCURRENT_CART_ID); // Clear cart via checkout
+                cartService.checkout(CONCURRENT_OP_CART_ID); // Clear cart via checkout
             }
         } catch (Exception e) {
             // Ignore
         }
-
-        final int threadCount = 8;
+        
+        final int thirdTestThreadCount = 10;
         final CountDownLatch startLatch = new CountDownLatch(1);
-        final CountDownLatch finishLatch = new CountDownLatch(threadCount);
-        final ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-
-        // Mix of add, read, and set operations
-        for (int i = 0; i < threadCount; i++) {
+        final CountDownLatch finishLatch = new CountDownLatch(thirdTestThreadCount);
+        final ExecutorService executor = Executors.newFixedThreadPool(thirdTestThreadCount);
+        final AtomicInteger successCount = new AtomicInteger(0);
+        
+        // Launch threads with concurrent operations
+        for (int i = 0; i < thirdTestThreadCount; i++) {
             final int threadId = i;
             executor.submit(() -> {
                 try {
@@ -274,29 +276,30 @@ class ConcurrencyTest {
                     switch (threadId % 4) {
                         case 0: // Add operations
                             for (int j = 0; j < 20; j++) {
-                                cartService.addItem(CONCURRENT_CART_ID, String.valueOf((j % 4) + 1), 1);
+                                cartService.addItem(CONCURRENT_OP_CART_ID, String.valueOf((j % 4) + 1), 1);
                                 // Removed Thread.sleep - delays not essential for test
                             }
                             break;
                         case 1: // Read operations
                             for (int j = 0; j < 30; j++) {
-                                var cart = cartService.getShoppingCart(CONCURRENT_CART_ID);
+                                var cart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
                                 if (cart.isPresent()) {
-                                    assertThat(cart.get().getCartTotal()).isGreaterThanOrEqualTo(0);
+                                    var shoppingCart = cart.get();
+                                    assertThat(shoppingCart.getCartTotal()).isGreaterThanOrEqualTo(0);
                                 }
                                 // Removed Thread.sleep - delays not essential for test
                             }
                             break;
                         case 2: // Add operations (replacing set since set() signature is different)
                             for (int j = 0; j < 15; j++) {
-                                cartService.addItem(CONCURRENT_CART_ID, String.valueOf((j % 4) + 1), 1);
+                                cartService.addItem(CONCURRENT_OP_CART_ID, String.valueOf((j % 4) + 1), 1);
                                 // Removed Thread.sleep - delays not essential for test
                             }
                             break;
                         case 3: // Checkout operations
                             for (int j = 0; j < 10; j++) {
                                 try {
-                                    cartService.checkout(CONCURRENT_CART_ID);
+                                    cartService.checkout(CONCURRENT_OP_CART_ID);
                                 } catch (Exception e) {
                                     // Cart might be empty, ignore
                                 }
@@ -304,6 +307,7 @@ class ConcurrencyTest {
                             }
                             break;
                     }
+                    successCount.incrementAndGet();
                 } catch (Exception e) {
                     // Concurrent operations might fail, that's expected
                 } finally {
@@ -319,7 +323,7 @@ class ConcurrencyTest {
         assertThat(finished).as("All mixed operations should complete").isTrue();
 
         // Final verification - cart should be in a consistent state
-        var finalCart = cartService.getShoppingCart(CONCURRENT_CART_ID);
+        var finalCart = cartService.getShoppingCart(CONCURRENT_OP_CART_ID);
         // Cart might be empty (checkout) or contain items, but should never be corrupted
         assertThat(finalCart.isPresent()).isTrue();
         
