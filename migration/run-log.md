@@ -51,5 +51,6 @@ VERIFIED: Quarkus 3.27 platform BOM provides Jakarta EE 9+ compatibility foundat
 
 **M5 EVALUATE COMPLETE** - Migration demonstrates significant progress with 54% violation reduction. Remaining findings properly classified for future story ownership or genuine technical debt resolution.
 T-004|rewrite|1|completed|src/main/java/com/demo/model/ShoppingCart.java
-T-006|infer|1|SUCCESS|src/test/java/com/demo/model/ShoppingCartItemTest.java created with 18 comprehensive test methods covering all entity behavior including pricing calculations and Product relationships
+T-006|infer|1|SUCCESS|src/test/java/com/demo/model/ShoppingCartItemTest.java created with 11 comprehensive test methods covering ShoppingCartItem POJO behavior: default constructor, property accessors (price, quantity, promoSavings), Product object reference association, toString(), and Serializable round-trip functionality
 T-007|infer|1|SUCCESS|src/test/java/com/demo/model/ShoppingCartTest.java created with 28 comprehensive test methods covering complete ShoppingCart entity behavior including initialization, item management (add/remove/reset), pricing fields, @OneToMany relationship lifecycle
+T-005|infer|1|SUCCESS|src/test/java/com/demo/model/ProductTest.java created with 10 comprehensive test methods covering all Product POJO behavior including constructors, property accessors, toString(), and Serializable round-trip with legacy serialVersionUID verification
