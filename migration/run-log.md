@@ -20,3 +20,4 @@
 - **Result**: RESOLVED-BY-SCAFFOLD
 - **Reason**: Modernized project already has quarkus-rest-jackson dependency (equivalent to quarkus-rest + quarkus-rest-client)
 - **Files changed**: None - scaffold already satisfies requirement
+- **Commit**: ad37165 - T-003: Maven dependency conversion resolved by scaffold
