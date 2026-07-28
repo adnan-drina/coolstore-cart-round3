@@ -193,8 +193,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         try {
             carts.compute(cartId, (id, existing) -> {
-                priceShoppingCart(cart);
                 cart.setShoppingCartItemList(dedupeCartItems(cart));
+                priceShoppingCart(cart);
                 return cart;
             });
         } catch (Exception ex) {
@@ -216,6 +216,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                 }
                 existing.resetShoppingCartItemList();
                 existing.setShoppingCartItemList(new ArrayList<>(tmpCart.getShoppingCartItemList()));
+                existing.setShoppingCartItemList(dedupeCartItems(existing));
                 priceShoppingCart(existing);
                 return existing;
             });
@@ -225,6 +226,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                 if (existing == null) {
                     existing = new ShoppingCart(cartId);
                 }
+                existing.setShoppingCartItemList(dedupeCartItems(existing));
                 priceShoppingCart(existing);
                 return existing;
             });
