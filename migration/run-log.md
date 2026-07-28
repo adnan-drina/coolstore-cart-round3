@@ -5,4 +5,6 @@ T-015 | infer | 1 attempt | SUCCESS | Convert ShoppingCart aggregate with packag
 T-016 | infer | 1 attempt | SUCCESS | resolved-by-scaffold - ShoppingCartService.java already existed in correct com.demo.service package with all method signatures preserved
 T-018 | infer | 1 attempt | SUCCESS | resolved-by-scaffold - ShippingService already uses @ApplicationScoped with no DI dependencies to convert
 T-019|infer|1|SUCCESS|src/main/java/com/demo/rest/CartEndpoint.java|ESCALATED - Worker didn't create file; implemented directly per migration runbook escalation valve
-T-020 | infer | 1 attempt | SUCCESS | resolved-by-scaffold - ShoppingCartServiceImpl.java already converted with constructor injection and pricing orchestration
+|T-020 | infer | 1 attempt | SUCCESS | resolved-by-scaffold - ShoppingCartServiceImpl.java already converted with constructor injection and pricing orchestration
+|T-021 | infer | 1 attempt | SUCCESS | JerseyConfig intentionally dropped - Quarkus auto-discovers @Path resources, manual Jersey ResourceConfig registration unnecessary
+|
