@@ -16,106 +16,97 @@ public class ShoppingCart implements Serializable {
     private String cartId;
     private List<ShoppingCartItem> shoppingCartItemList = new ArrayList<>();
 
-	public ShoppingCart() {
-	}
+    public ShoppingCart() {
+    }
 
-	public ShoppingCart(String cartId) {
-		this.cartId = cartId;
-	}
+    public ShoppingCart(String cartId) {
+        this.cartId = cartId;
+    }
 
-	public String getCartId() {
-		return cartId;
-	}
+    public String getCartId() {
+        return cartId;
+    }
 
-	public void setCartId(String cartId) {
-		this.cartId = cartId;
-	}
+    public void setCartId(String cartId) {
+        this.cartId = cartId;
+    }
 
-	public List<ShoppingCartItem> getShoppingCartItemList() {
-		return shoppingCartItemList;
-	}
+    public List<ShoppingCartItem> getShoppingCartItemList() {
+        return shoppingCartItemList;
+    }
 
-	public void setShoppingCartItemList(List<ShoppingCartItem> shoppingCartItemList) {
-		this.shoppingCartItemList = shoppingCartItemList;
-	}
+    public void setShoppingCartItemList(List<ShoppingCartItem> shoppingCartItemList) {
+        this.shoppingCartItemList = shoppingCartItemList;
+    }
 
-	public void resetShoppingCartItemList() {
-		shoppingCartItemList = new ArrayList<ShoppingCartItem>();
-  }
+    public void resetShoppingCartItemList() {
+        shoppingCartItemList = new ArrayList<>();
+    }
 
-	public void addShoppingCartItem(ShoppingCartItem sci) {
-		
-		if ( sci != null ) {
-			
-			shoppingCartItemList.add(sci);
-			
-		}
-		
-	}
-	
-	public boolean removeShoppingCartItem(ShoppingCartItem sci) {
-		
-		boolean removed = false;
-		
-		if ( sci != null ) {
-			
-			removed = shoppingCartItemList.remove(sci);
-			
-		}
-		
-		return removed;
-		
-	}
+    public void addShoppingCartItem(ShoppingCartItem sci) {
+        if (sci != null) {
+            shoppingCartItemList.add(sci);
+        }
+    }
 
-	public double getCartItemTotal() {
-		return cartItemTotal;
-	}
+    public boolean removeShoppingCartItem(ShoppingCartItem sci) {
+        boolean removed = false;
 
-	public void setCartItemTotal(double cartItemTotal) {
-		this.cartItemTotal = cartItemTotal;
-	}
+        if (sci != null) {
+            removed = shoppingCartItemList.remove(sci);
+        }
 
-	public double getShippingTotal() {
-		return shippingTotal;
-	}
+        return removed;
+    }
 
-	public void setShippingTotal(double shippingTotal) {
-		this.shippingTotal = shippingTotal;
-	}
+    public double getCartItemTotal() {
+        return cartItemTotal;
+    }
 
-	public double getCartTotal() {
-		return cartTotal;
-	}
+    public void setCartItemTotal(double cartItemTotal) {
+        this.cartItemTotal = cartItemTotal;
+    }
 
-	public void setCartTotal(double cartTotal) {
-		this.cartTotal = cartTotal;
-	}
+    public double getShippingTotal() {
+        return shippingTotal;
+    }
 
-	public double getCartItemPromoSavings() {
-		return cartItemPromoSavings;
-	}
+    public void setShippingTotal(double shippingTotal) {
+        this.shippingTotal = shippingTotal;
+    }
 
-	public void setCartItemPromoSavings(double cartItemPromoSavings) {
-		this.cartItemPromoSavings = cartItemPromoSavings;
-	}
+    public double getCartTotal() {
+        return cartTotal;
+    }
 
-	public double getShippingPromoSavings() {
-		return shippingPromoSavings;
-	}
+    public void setCartTotal(double cartTotal) {
+        this.cartTotal = cartTotal;
+    }
 
-	public void setShippingPromoSavings(double shippingPromoSavings) {
-		this.shippingPromoSavings = shippingPromoSavings;
-	}
+    public double getCartItemPromoSavings() {
+        return cartItemPromoSavings;
+    }
 
-	@Override
-	public String toString() {
-		return "ShoppingCart [cartId=" + cartId
-				+ ", cartItemTotal=" + cartItemTotal
-				+ ", cartItemPromoSavings=" + cartItemPromoSavings
-				+ ", shippingTotal=" + shippingTotal
-				+ ", shippingPromoSavings=" + shippingPromoSavings
-				+ ", cartTotal=" + cartTotal + ", shoppingCartItemList="
-				+ shoppingCartItemList + "]";
-	}
-	
+    public void setCartItemPromoSavings(double cartItemPromoSavings) {
+        this.cartItemPromoSavings = cartItemPromoSavings;
+    }
+
+    public double getShippingPromoSavings() {
+        return shippingPromoSavings;
+    }
+
+    public void setShippingPromoSavings(double shippingPromoSavings) {
+        this.shippingPromoSavings = shippingPromoSavings;
+    }
+
+    @Override
+    public String toString() {
+        return "ShoppingCart [cartId=" + cartId
+                + ", cartItemTotal=" + cartItemTotal
+                + ", cartItemPromoSavings=" + cartItemPromoSavings
+                + ", shippingTotal=" + shippingTotal
+                + ", shippingPromoSavings=" + shippingPromoSavings
+                + ", cartTotal=" + cartTotal + ", shoppingCartItemList="
+                + shoppingCartItemList + "]";
+    }
 }
