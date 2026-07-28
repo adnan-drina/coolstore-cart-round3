@@ -91,10 +91,16 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
             if (p != null) {
                 sci.setProduct(new Product(p.getItemId(), p.getName(), p.getDesc(), p.getPrice()));
-                sci.setPrice(p.getPrice());
+                // Only reset price if no promotional discount is already applied
+                if (sci.getPromoSavings() == 0) {
+                    sci.setPrice(p.getPrice());
+                }
             }
 
-            sci.setPromoSavings(0);
+            // Only reset promo savings if no discount is already applied
+            if (sci.getPromoSavings() == 0) {
+                sci.setPromoSavings(0);
+            }
         }
     }
 
@@ -195,8 +201,10 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         List<ShoppingCartItem> result = new ArrayList<>();
         Map<String, Integer> quantityMap = new HashMap<>();
         Map<String, Product> existingProducts = new HashMap<>();
+        Map<String, Double> itemPrices = new HashMap<>();
+        Map<String, Double> itemPromoSavings = new HashMap<>();
         
-        // First pass: collect quantities and preserve existing products
+        // First pass: collect quantities, preserve existing products, and keep promotional pricing
         for (ShoppingCartItem sci : sc.getShoppingCartItemList()) {
             String productId = sci.getProduct().getItemId();
             if (quantityMap.containsKey(productId)) {
@@ -204,15 +212,19 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             } else {
                 quantityMap.put(productId, sci.getQuantity());
                 existingProducts.put(productId, sci.getProduct());
+                itemPrices.put(productId, sci.getPrice());
+                itemPromoSavings.put(productId, sci.getPromoSavings());
             }
         }
 
-        // Second pass: create new items with preserved products
+        // Second pass: create new items with preserved products and promotional pricing
         for (Map.Entry<String, Integer> entry : quantityMap.entrySet()) {
-            Product existingProduct = existingProducts.get(entry.getKey());
+            String productId = entry.getKey();
+            Product existingProduct = existingProducts.get(productId);
             ShoppingCartItem newItem = new ShoppingCartItem();
             newItem.setQuantity(entry.getValue());
-            newItem.setPrice(existingProduct.getPrice());
+            newItem.setPrice(itemPrices.get(productId));
+            newItem.setPromoSavings(itemPromoSavings.get(productId));
             newItem.setProduct(existingProduct);
             result.add(newItem);
         }
