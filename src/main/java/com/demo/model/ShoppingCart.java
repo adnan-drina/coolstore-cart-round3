@@ -4,24 +4,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "SHOPPING_CART")
 public class ShoppingCart implements Serializable {
 
 	private static final long serialVersionUID = -1108043957592113528L;
 
-	@Id
-	@Column(name = "CART_ID")
 	private String cartId;
 
-	@OneToMany(mappedBy = "shoppingCart", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<ShoppingCartItem> shoppingCartItemList = new ArrayList<>();
 
 	// Pricing fields
@@ -32,6 +20,7 @@ public class ShoppingCart implements Serializable {
 	private double cartTotal;
 
 	public ShoppingCart() {
+		// Default constructor for JPA/serialization
 	}
 
 	public ShoppingCart(String cartId) {
@@ -114,10 +103,13 @@ public class ShoppingCart implements Serializable {
 
 	@Override
 	public String toString() {
-		return "ShoppingCart [cartId=" + cartId + ", cartItemTotal=" + cartItemTotal
-				+ ", cartItemPromoSavings=" + cartItemPromoSavings + ", shippingTotal=" + shippingTotal
-				+ ", shippingPromoSavings=" + shippingPromoSavings + ", cartTotal=" + cartTotal
-				+ ", shoppingCartItemList=" + shoppingCartItemList + "]";
+		return "ShoppingCart [cartId=" + cartId
+				+ ", cartItemTotal=" + cartItemTotal
+				+ ", cartItemPromoSavings=" + cartItemPromoSavings
+				+ ", shippingTotal=" + shippingTotal
+				+ ", shippingPromoSavings=" + shippingPromoSavings
+				+ ", cartTotal=" + cartTotal + ", shoppingCartItemList="
+				+ shoppingCartItemList + "]";
 	}
 
 }

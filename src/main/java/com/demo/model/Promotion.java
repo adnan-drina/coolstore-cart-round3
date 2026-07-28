@@ -1,22 +1,14 @@
 package com.demo.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "promotion")
 public class Promotion {
 
 	private String itemId;
-	@Id
-	
 	private double percentOff;
 
 	public Promotion() {
-		
+		// Default constructor for JPA/serialization
 	}
-	
+
 	public Promotion(String itemId, double percentOff) {
 		super();
 		this.itemId = itemId;
@@ -44,5 +36,5 @@ public class Promotion {
 		return "Promotion [itemId=" + itemId + ", percentOff=" + percentOff
 				+ "]";
 	}
-	
+
 }
