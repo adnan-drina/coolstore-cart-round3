@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import com.demo.model.Promotion;
 import com.demo.model.ShoppingCart;
 import com.demo.model.ShoppingCartItem;
@@ -13,10 +14,12 @@ import com.demo.model.ShoppingCartItem;
 @ApplicationScoped
 public class PromoService {
 
-    private Set<Promotion> promotionSet = new HashSet<>();
+    private Set<Promotion> promotionSet;
 
+    @Inject
     public PromoService() {
         // Coolstore seed item also used by inventory/catalog demos
+        this.promotionSet = new HashSet<>();
         promotionSet.add(new Promotion("329299", .25));
     }
 

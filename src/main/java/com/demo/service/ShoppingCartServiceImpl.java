@@ -7,29 +7,41 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
 @ApplicationScoped
 public class ShoppingCartServiceImpl implements ShoppingCartService {
 
-    private final Map<String, ShoppingCart> carts = new HashMap<>();
-    
+    private static final Logger LOG = LoggerFactory.getLogger(ShoppingCartServiceImpl.class);
+
+    private final ShippingService shippingService;
+    private final PromoService promoService;
+    private final CatalogService catalogService;
+
+    private Map<String, ShoppingCart> carts;
+    private Map<String, Product> productMap = new HashMap<>();
+
     @Inject
-    ShippingService shippingService;
-    
-    @Inject
-    PromoService promoService;
-    
-    @Inject
-    @RestClient
-    CatalogService catalogService;
+    public ShoppingCartServiceImpl(
+            ShippingService shippingService,
+            PromoService promoService,
+            @RestClient CatalogService catalogService) {
+        this.shippingService = shippingService;
+        this.promoService = promoService;
+        this.catalogService = catalogService;
+    }
 
     @PostConstruct
     public void init() {
-        // Initialize with some basic setup if needed
+        LOG.info("Using local in-memory cache for cart data");
+        carts = new HashMap<>();
     }
 
     @Override
@@ -75,23 +87,25 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         sc.setCartTotal(0);
 
         for (ShoppingCartItem sci : sc.getShoppingCartItemList()) {
-            // Reset promo savings for each item
+            Product p = getProduct(sci.getProduct().getItemId());
+
+            if (p != null) {
+                sci.setProduct(new Product(p.getItemId(), p.getName(), p.getDesc(), p.getPrice()));
+                sci.setPrice(p.getPrice());
+            }
+
             sci.setPromoSavings(0);
         }
     }
 
     @Override
     public Product getProduct(String itemId) {
-        try {
+        if (!productMap.containsKey(itemId)) {
             List<Product> products = catalogService.products();
-            return products.stream()
-                .filter(p -> p.getItemId().equals(itemId))
-                .findFirst()
-                .orElseGet(() -> new Product(itemId, "Product " + itemId, "Description", 100.0));
-        } catch (Exception e) {
-            // Create default product if catalog service is not available
-            return new Product(itemId, "Product " + itemId, "Description", 100.0);
+            productMap = products.stream().collect(Collectors.toMap(Product::getItemId, Function.identity()));
         }
+
+        return productMap.get(itemId);
     }
 
     @Override
@@ -132,6 +146,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         Product product = getProduct(itemId);
 
         if (product == null) {
+            LOG.warn("Invalid product {} request to get added to the shopping cart. No product added", itemId);
             return cart;
         }
 
