@@ -132,5 +132,23 @@
   - Changed `@POST @Path("/acceptance-check")` to `@GET @Path("/acceptance-check")`
   - Replaced hand-built JSON string `Response.ok().entity("{\"status\": \"ok\"}")` with proper DTO: `Response.ok(java.util.Map.of("status", "ok"))`
   - Updated all tests to use GET instead of POST and validate proper JSON structure
-| T-005 | infer | 1 | COMPLETED | CartEndpoint.java (+@Min validation), ServiceExceptionMapper.java, CartEndpointIntegrationTest.java (+4 validation tests), pom.xml (+validation deps) |
-T-006|infer|1|SUCCESS|src/main/java/com/demo/service/ShoppingCartServiceImpl.java
+
+### T-007: Characterize and pin existing behavior
+- **Class**: infer
+- **Attempts**: 1
+- **Result**: SUCCESS
+- **Files Touched**: 
+  - `src/test/java/com/demo/rest/ErrorHandlingTest.java` (created comprehensive error path tests with 400/503 validation)
+  - `src/test/java/com/demo/service/CacheTest.java` (created cache behavior tests for missing product IDs)
+  - `src/test/java/com/demo/service/ConcurrencyTest.java` (created concurrency tests for cart operations on same cart ID)
+  - `src/test/java/com/demo/service/DedupeTest.java` (created dedupe characterization tests)
+- **Verification**: Complete test suite passes including all new hardening tests (117 tests total)
+- **Sensors**: Green (sensors.sh task)
+- **Changes**: 
+  - Created comprehensive test coverage that characterizes existing behavior contracts:
+    * ErrorHandlingTest.java: 13 tests for 400/503 error paths and validation responses
+    * CacheTest.java: 10 tests for cache behavior with missing product IDs
+    * ConcurrencyTest.java: 3 tests for thread-safe cart operations under concurrent access
+    * DedupeTest.java: 11 tests characterizing dedupe-before-pricing behavior
+  - All pinned behavioral values (2000.0, 2500.0, -10.99, tier table, PromoService composition) remain validated
+  - Tests follow T-007 specification: characterize and pin all existing behavior without modification
