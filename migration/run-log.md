@@ -51,3 +51,5 @@ VERIFIED: Quarkus 3.27 platform BOM provides Jakarta EE 9+ compatibility foundat
 
 **M5 EVALUATE COMPLETE** - Migration demonstrates significant progress with 54% violation reduction. Remaining findings properly classified for future story ownership or genuine technical debt resolution.
 T-004|rewrite|1|completed|src/main/java/com/demo/model/ShoppingCart.java
+T-006|infer|1|SUCCESS|src/test/java/com/demo/model/ShoppingCartItemTest.java created with 18 comprehensive test methods covering all entity behavior including pricing calculations and Product relationships
+T-007|infer|1|SUCCESS|src/test/java/com/demo/model/ShoppingCartTest.java created with 28 comprehensive test methods covering complete ShoppingCart entity behavior including initialization, item management (add/remove/reset), pricing fields, @OneToMany relationship lifecycle
