@@ -8,7 +8,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
 public class ShoppingCartServiceTest {
@@ -20,11 +20,10 @@ public class ShoppingCartServiceTest {
     public void should_get_initialized_shopping_cart_in_case_of_not_exists() {
         final ShoppingCart shoppingCart = shoppingCartService.getShoppingCart("1111");
 
-        assertThat(shoppingCart)
-            .returns(0.0, ShoppingCart::getCartItemPromoSavings)
-            .returns(0.0, ShoppingCart::getCartItemTotal)
-            .returns(0.0, ShoppingCart::getShippingPromoSavings)
-            .returns(0.0, ShoppingCart::getCartTotal);
+        assertEquals(0.0, shoppingCart.getCartItemPromoSavings());
+        assertEquals(0.0, shoppingCart.getCartItemTotal());
+        assertEquals(0.0, shoppingCart.getShippingPromoSavings());
+        assertEquals(0.0, shoppingCart.getCartTotal());
     }
 
     @Test
@@ -38,10 +37,9 @@ public class ShoppingCartServiceTest {
 
         shoppingCartService.priceShoppingCart(shoppingCart);
 
-        assertThat(shoppingCart)
-            .returns(0.0, ShoppingCart::getCartItemPromoSavings)
-            .returns(2000.0, ShoppingCart::getCartItemTotal)
-            .returns(-10.99, ShoppingCart::getShippingPromoSavings)
-            .returns(2000.0, ShoppingCart::getCartTotal);
+        assertEquals(0.0, shoppingCart.getCartItemPromoSavings());
+        assertEquals(2000.0, shoppingCart.getCartItemTotal());
+        assertEquals(-10.99, shoppingCart.getShippingPromoSavings());
+        assertEquals(2000.0, shoppingCart.getCartTotal());
     }
 }
