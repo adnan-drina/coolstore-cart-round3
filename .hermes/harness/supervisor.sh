@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
 # Stage 080 harness SUPERVISOR — drives the full autonomous migration:
-#   Phase A (ground truth) -> Phase B (plan) -> Phase C (task loop)
-#   -> Phase D (final sensors) -> Phase E (ship through the factory gate)
+#   M1 (ground truth) -> M3 (plan) -> M4 (task loop)
+#   -> M5 evaluate (final sensors) -> M5 ship (ship through the factory gate)
 #
 # The supervisor owns LOOP CONTROL and FAILURE CLASSIFICATION; the
 # orchestrator model owns judgment inside each session. Session outcomes
@@ -63,7 +63,7 @@ committed() { git log --oneline "${RUN_BASE}..HEAD" | grep -q " $1:"; }
 
 # --- Story mode (redesign M-process, first outer-loop slice) --------------
 # STORY_SPEC_PREFIX  commit prefix that satisfies the plan stage (e.g.
-#                    "S01 spec") — M2/M3 authored the plan; Phase B is
+#                    "S01 spec") — M2/M3 authored the plan; M3 is
 #                    skipped when that commit exists.
 # PLAN_SCOPE         comma-separated finding ids this story owns — passed
 #                    to plan-lint --findings-scope.
@@ -81,9 +81,9 @@ STORY_DEPLOY="${STORY_DEPLOY:-true}"
 plan_stage_done() {
   # Story mode: an explicit STORY_TASKS file is authoritative — the outer
   # loop only sets it after M3 committed the spec (a revert in the range
-  # must not resurrect Phase B).
+  # must not resurrect M3).
   if [ -n "${STORY_TASKS:-}" ] && [ -f "${STORY_TASKS}" ]; then return 0; fi
-  { committed "Phase B" || { [ -n "$STORY_SPEC_PREFIX" ] && committed "$STORY_SPEC_PREFIX"; }; } \
+  { committed "M3 spec" || { [ -n "$STORY_SPEC_PREFIX" ] && committed "$STORY_SPEC_PREFIX"; }; } \
     && ls specs/*/tasks.md >/dev/null 2>&1
 }
 
@@ -129,17 +129,11 @@ orch() { # $1=tag $2=prompt ; logs to /tmp/sup-<tag>.log ; returns rc
   t0=$(date +%s)
   # Fix-class sessions are mechanical: a wedged style fix dies in 15
   # minutes, not 45 (measured: 45-min sfix for 8 style violations).
-  # They may also route to a cheaper seat via FIX_PROVIDER/FIX_MODEL
-  # (improvement #16) — unset means the orchestrator seat, no change.
-  local budget="$SESSION_TIMEOUT" prov="$ORCH_PROVIDER" model="$ORCH_MODEL"
+  local budget="$SESSION_TIMEOUT"
   ORCH_LAST_BUDGET="$SESSION_TIMEOUT"
-  case "$tag" in *sfix*|*treefix*|*-lint*|*preflightfix*)
-    budget="${FIX_TIMEOUT:-900}"
-    [ -n "${FIX_PROVIDER:-}" ] && prov="$FIX_PROVIDER"
-    [ -n "${FIX_MODEL:-}" ] && model="$FIX_MODEL";;
-  esac
+  case "$tag" in *sfix*|*treefix*|*-lint*|*preflightfix*) budget="${FIX_TIMEOUT:-900}";; esac
   ORCH_LAST_BUDGET="$budget"
-  timeout "$budget" hermes chat --provider "$prov" --model "$model" -q "$prompt" \
+  timeout "$budget" hermes chat --provider "$ORCH_PROVIDER" --model "$ORCH_MODEL" -q "$prompt" \
     > "/tmp/sup-${tag}.log" 2>&1
   rc=$?
   t1=$(date +%s)
@@ -210,19 +204,29 @@ post_commit_verify() { # $1=commit-prefix $2=tag ; always returns 0
     fi
     git checkout -q -- . 2>/dev/null
     log "$tag: committed but the ${SENSOR_KIND} sensor is RED — dispatching sensor-fix session"
+    # Cheap-loop guidance (V4 finding #1: ~5100s of full `mvn clean verify`
+    # inside fix sessions). Point the model at the dimension-specific cheap
+    # recheck so it stops re-running the whole build per fix.
     orch "${tag}-sfix" \
-"Use the migration-harness skill and read EXECUTION.md in its directory. The stage '${prefix}' was just committed but the supervisor's post-commit sensor is RED: .hermes/harness/sensors.sh ${SENSOR_KIND} fails — read /tmp/sensor-task.log, /tmp/sensor-milestone.log and /tmp/sensor-sonar.log for the exact errors (sonar violations are listed inline when the gate is red). If /tmp/scope-violation.txt exists, the story-scope sensor reverted out-of-scope edits after the commit — read it and repair WITHIN the story scope only. Diagnose and fix the ROOT CAUSE (typical: files harvested prematurely without their extension/dependency, or into the wrong package — fix or revert them; add a dependency ONLY if this stage's findings require it). COMMIT THE MOMENT THE SENSOR IS GREEN — run .hermes/harness/sensors.sh task after each fix and immediately commit ONE commit starting '${prefix} sensor fix:' when it passes; do not polish further (a green fix that never commits is a failed session).
+"Use the migration-harness skill and read EXECUTION.md in its directory. The stage '${prefix}' was just committed but the supervisor's post-commit '${SENSOR_KIND}' sensor is RED — read /tmp/sensor-task.log, /tmp/sensor-milestone.log and /tmp/sensor-sonar.log for the exact errors (sonar violations are listed inline when the gate is red). If /tmp/scope-violation.txt exists, the story-scope sensor reverted out-of-scope edits — read it and repair WITHIN the story scope only. Diagnose and fix the ROOT CAUSE (typical: files harvested prematurely without their extension/dependency, or into the wrong package — fix or revert them; add a dependency ONLY if this stage's findings require it). CHEAP FIX LOOP: fix ALL listed violations in ONE pass, then verify ONCE with the dimension-specific check — sonar violations: .hermes/harness/sensors.sh sonar; fidelity drift: .hermes/harness/sensors.sh fidelity; compile/test failure: .hermes/harness/sensors.sh task. DO NOT run .hermes/harness/sensors.sh milestone in a loop (it rebuilds the whole project each time). Commit ONE commit starting '${prefix} sensor fix:' the moment your dimension check is green; do not polish further.
 ${RUN_CONTRACT}"
+    # #6: re-verify the TRIGGERING sensor (${SENSOR_KIND}), not `task` — a
+    # milestone-red (fidelity/sonar) is not cleared by a task-sensor green,
+    # and a commit with the right prefix is not proof the red went away.
     if committed "${prefix} sensor fix"; then
-      log "$tag: sensor-fix committed $(git log --oneline -1)"
-    elif [ -n "$(git status --porcelain)" ] && .hermes/harness/sensors.sh task >> "$LOG" 2>&1; then
-      # Mechanical closure for the sensor-fix path too (V3 S02: the
-      # session fixed everything, went green, never committed).
-      git add -A && git commit -m "${prefix} sensor fix: supervisor mechanical commit of sensor-green session work" >/dev/null 2>&1
+      if .hermes/harness/sensors.sh "$SENSOR_KIND" >> "$LOG" 2>&1; then
+        log "$tag: sensor-fix committed and ${SENSOR_KIND} GREEN $(git log --oneline -1)"
+      else
+        event "$tag" 0 sfix_committed_still_red verify
+        log "$tag: sensor-fix committed but ${SENSOR_KIND} STILL RED — recorded as debt, continuing"
+      fi
+    elif [ -n "$(git status --porcelain)" ] && .hermes/harness/sensors.sh "$SENSOR_KIND" >> "$LOG" 2>&1; then
+      # Mechanical closure — verifies the TRIGGERING sensor (#6), not task.
+      git add -A && git commit -m "${prefix} sensor fix: supervisor mechanical commit of ${SENSOR_KIND}-green session work" >/dev/null 2>&1
       event "$tag" 0 mechanical_commit sfix_closure
-      log "$tag: sensor-fix work was GREEN but uncommitted — supervisor completed the commit"
+      log "$tag: sensor-fix work was ${SENSOR_KIND}-GREEN but uncommitted — supervisor completed the commit"
     else
-      log "$tag: sensor-fix did NOT commit — red tree recorded, continuing"
+      log "$tag: sensor-fix did NOT clear ${SENSOR_KIND} — red recorded, continuing"
     fi
   fi
   return 0
@@ -320,22 +324,30 @@ run_stage() {
   return 1
 }
 
-# ------------------------------------------------------------- Phase F
-# The improvement loop belongs to the agent too (division-of-labor
-# audit): after the run closes, one bounded session reads the run's own
-# telemetry and PROPOSES skill/harness diffs. Proposals are committed
-# for operator review — Phase F has NO authority to modify the harness
-# or skills, and a failed retro never blocks the run outcome.
+# ------------------------------------------------------------- Retro
+# After a story/run closes, one bounded session writes proposals split
+# into (a) brief updates the outer loop may auto-apply to remaining
+# briefs and (b) skill/harness proposals for humans only. Retro never
+# edits .hermes/skills/** or harness scripts; a failed retro never
+# blocks the run outcome.
 phase_f_retro() {
-  committed "Phase F" && return 0
+  committed "Retro" && return 0
   cp "$EVENTS" migration/retro-events.csv 2>/dev/null || true
   cp "$METRICS" migration/retro-metrics.csv 2>/dev/null || true
   git add migration/retro-*.csv >/dev/null 2>&1 || true
-  orch "phaseF" \
-"Use the migration-harness skill. The migration run is CLOSED — this is Phase F, the retrospective. Evidence to read with your file tools: migration/run-report.md, migration/retro-events.csv, migration/retro-metrics.csv, migration/run-log.md, migration/debt.md, and the skill files PLANNING.md, EXECUTION.md, SHIPPING.md, MAPPINGS.md in the migration-harness directory. Write migration/retro-proposals.md containing: (1) the three costliest failure patterns of THIS run, each citing evidence rows (event classes, session durations, run-log entries); (2) for each pattern one CONCRETE proposed change to a specific skill file or sensor — quote the exact text to add or replace and name the file and section; (3) an ARTIFACT review: read the actual commits of this run (git log with diffs for the task commits), judging harvest fidelity, story-scope discipline, and any fabrication-pattern code — the telemetry alone missed every artifact-level defect in V3; (4) anything the harness itself did that wasted model sessions. PROPOSE ONLY: do not modify any skill or harness file. Finish with ONE commit whose message STARTS with 'Phase F:'.
+  orch "retro" \
+"Use the migration-harness skill. The migration run/story is CLOSED — this is Retro. Evidence to read with your file tools: migration/run-report.md, migration/retro-events.csv, migration/retro-metrics.csv, migration/run-log.md, migration/debt.md, remaining briefs under migration/briefs/ (if any), and the skill files PLANNING.md, EXECUTION.md, SHIPPING.md, MAPPINGS.md. Write migration/retro-proposals.md with EXACTLY these markdown sections (both required):
+
+## Brief updates (auto-applicable)
+Concrete edits for REMAINING story briefs only (not the story just finished). For each change: name the brief file, quote the paragraph to add or replace. Empty list is fine if nothing should change.
+
+## Skill / harness proposals (human-only)
+(1) the three costliest failure patterns of THIS run, citing evidence; (2) for each pattern one CONCRETE proposed change to a specific skill or sensor — quote exact text and name file/section; (3) ARTIFACT review of this run's commits (harvest fidelity, story-scope, fabrication); (4) harness waste. PROPOSE ONLY.
+
+Do NOT modify any skill, harness script, or brief in this session — proposals file only. Finish with ONE commit whose message STARTS with 'Retro:'.
 ${RUN_CONTRACT}"
-  committed "Phase F" && log "Phase F: retro proposals committed $(git log --oneline -1)" \
-    || log "Phase F: retro session did not commit — skipped (non-blocking)"
+  committed "Retro" && log "Retro: retro proposals committed $(git log --oneline -1)" \
+    || log "Retro: retro session did not commit — skipped (non-blocking)"
 }
 
 write_run_report() { # $1 = outcome line
@@ -372,56 +384,56 @@ write_run_report() { # $1 = outcome line
   git add migration/run-report.md && git commit -q -m "Run report: $1" 2>/dev/null || true
 }
 
-# ---------------------------------------------------------------- Phase A
-# The harness owns the analysis end-to-end (2026-07-27 decision): Phase A
+# ---------------------------------------------------------------- M1
+# The harness owns the analysis end-to-end (2026-07-27 decision): M1
 # ALWAYS runs its own kantra with the migration.yaml analysis contract —
 # deterministic rule selection, reproducible ground truth. An IDE-run
 # analysis is a demo/browsing aid, never the harness input.
-if committed "Phase A" || [ -f migration/mta-findings.json ]; then
-  log "Phase A: already present"
+if committed "M1 analyze" || [ -f migration/mta-findings.json ]; then
+  log "M1: already present"
 else
   # Extracted to analyze.sh (V4) so the outer loop can run the same step
   # before M2 sequencing; behavior unchanged.
   if .hermes/harness/analyze.sh >> "$LOG" 2>&1; then
-    log "Phase A: committed by script — $(git log --oneline -1)"
+    log "M1: committed by script — $(git log --oneline -1)"
   else
-    log "FATAL: Phase A ground truth unavailable"; write_run_report "phaseA-failed"; echo phaseA-failed > /tmp/supervisor-done; exit 1
+    log "FATAL: M1 ground truth unavailable"; write_run_report "m1-failed"; echo m1-failed > /tmp/supervisor-done; exit 1
   fi
 fi
 
 if plan_stage_done; then
-  log "Phase B: already present"
+  log "M3: already present"
 else
-  run_stage "Phase B" "phaseB" \
-"Use the migration-harness skill and read PLANNING.md in its directory. Phase A is committed. Execute Phase B ONLY: read the legacy code under /projects/legacy and the findings (scripted extraction only), then write specs/001-coolstore-migration/spec.md, plan.md and tasks.md per the skill. A deterministic plan lint gates the result (format, ids, ordering, design content, finding/preserve/acceptance coverage) — PLANNING.md states the rules it enforces.
+  run_stage "M3 spec" "m3-spec" \
+"Use the migration-harness skill and read PLANNING.md in its directory. M1 is committed. Execute M3 ONLY: read the legacy code under /projects/legacy and the findings (scripted extraction only), then write specs/001-coolstore-migration/spec.md, plan.md and tasks.md per the skill. A deterministic plan lint gates the result (format, ids, ordering, design content, finding/preserve/acceptance coverage) — PLANNING.md states the rules it enforces.
 ${RUN_CONTRACT}
-Finish with ONE commit whose message STARTS with 'Phase B:'. Stop after Phase B." \
-"Use the migration-harness skill and read PLANNING.md in its directory. Execute Phase B ONLY; a previous attempt did not commit. If specs/001-coolstore-migration/{spec,plan,tasks}.md exist and are complete, commit them with message starting 'Phase B:'; otherwise finish writing them first. ${RUN_CONTRACT}" \
-    || { log "FATAL: Phase B failed"; echo phaseB-failed > /tmp/supervisor-done; exit 1; }
+Finish with ONE commit whose message STARTS with 'M3 spec:'. Stop after M3." \
+"Use the migration-harness skill and read PLANNING.md in its directory. Execute M3 ONLY; a previous attempt did not commit. If specs/001-coolstore-migration/{spec,plan,tasks}.md exist and are complete, commit them with message starting 'M3 spec:'; otherwise finish writing them first. ${RUN_CONTRACT}" \
+    || { log "FATAL: M3 failed"; echo m3-failed > /tmp/supervisor-done; exit 1; }
 fi
 
 # ------------------------------------------------------------- Plan lint
 # Deterministic B2 gate: a defective plan is bounced ONCE for revision
-# with the specific lint findings before Phase C spends hours on it.
+# with the specific lint findings before M4 spends hours on it.
 TASKS_FILE="${STORY_TASKS:-$(ls specs/*/tasks.md 2>/dev/null | head -1)}"
 SCOPE_ARGS=""
 [ -n "$PLAN_SCOPE" ] && SCOPE_ARGS="--findings-scope $PLAN_SCOPE"
 LINT_OUT=$(python3 .hermes/harness/plan-lint.py "$TASKS_FILE" migration/mta-findings.json $SCOPE_ARGS 2>&1)
-if [ $? -ne 0 ] && ! committed "Phase B revision"; then
+if [ $? -ne 0 ] && ! committed "M3 revision"; then
   log "plan lint: revision required"; echo "$LINT_OUT" | head -20 >> "$LOG"
   printf '%s\n' "$LINT_OUT" > /tmp/plan-lint.txt
-  run_stage "Phase B revision" "phaseB-lint" \
+  run_stage "M3 revision" "m3-lint" \
 "Use the migration-harness skill and read PLANNING.md and MAPPINGS.md in its directory. The plan lint REJECTED specs/*/tasks.md — the findings are in /tmp/plan-lint.txt (read it with your file tools). Revise the plan to fix every lint finding: infer tasks must carry the decided target design (file mappings, signatures, annotations — cite MAPPINGS.md shapes). Do not renumber or remove completed work.
 ${RUN_CONTRACT}
-Commit prefix: 'Phase B revision:'." \
-"Use the migration-harness skill and read PLANNING.md in its directory. Finish revising the plan per /tmp/plan-lint.txt and commit with prefix 'Phase B revision:'.
+Commit prefix: 'M3 revision:'." \
+"Use the migration-harness skill and read PLANNING.md in its directory. Finish revising the plan per /tmp/plan-lint.txt and commit with prefix 'M3 revision:'.
 ${RUN_CONTRACT}" \
     || log "plan lint: revision round exhausted — proceeding with the plan as-is (recorded)"
   LINT2=$(python3 .hermes/harness/plan-lint.py "$TASKS_FILE" migration/mta-findings.json $SCOPE_ARGS 2>&1) \
     && log "plan lint: PASS after revision" || log "plan lint: still failing after revision — proceeding, findings logged"
 fi
 
-# ---------------------------------------------------------------- Phase C
+# ---------------------------------------------------------------- M4
 TASKS_FILE="${STORY_TASKS:-$(ls specs/*/tasks.md 2>/dev/null | head -1)}"
 # Accept 3-6 hash heading levels and any T-style id — models format
 # tasks.md differently no matter what the prompt mandates (run #3 lesson).
@@ -462,10 +474,10 @@ task_class() { echo "$TASK_CLASSES" | grep -m1 "^$1:" | cut -d: -f2; }
 run_task() { # $1=task id — the ordinary single-task stage
   local T="$1"
   run_stage "$T" "$T" \
-"Use the migration-harness skill and read EXECUTION.md in its directory. Execute Phase C for task ${T} from ${TASKS_FILE} ONLY.
+"Use the migration-harness skill and read EXECUTION.md in its directory. Execute M4 for task ${T} from ${TASKS_FILE} ONLY.
 ${RUN_CONTRACT}
 Finish with ONE commit whose message STARTS with '${T}:'. Stop after ${T}." \
-"Use the migration-harness skill and read EXECUTION.md in its directory. Execute Phase C for task ${T} from ${TASKS_FILE} ONLY. A previous attempt may have left partial uncommitted work or a finished worker run - inspect git status first, verify or finish the work, run the sensors, and commit ONE commit whose message STARTS with '${T}:'.
+"Use the migration-harness skill and read EXECUTION.md in its directory. Execute M4 for task ${T} from ${TASKS_FILE} ONLY. A previous attempt may have left partial uncommitted work or a finished worker run - inspect git status first, verify or finish the work, run the sensors, and commit ONE commit whose message STARTS with '${T}:'.
 ${RUN_CONTRACT}" \
     || log "$T: exhausted — recorded, moving on"
 }
@@ -478,7 +490,7 @@ flush_batch() { # $1=space-separated rewrite task ids
     local list; list=$(echo $ids | tr ' ' ',')
     log "batch: dispatching $n rewrite tasks in one session: $ids"
     orch "batch-$(echo $ids | tr ' ' '-')" \
-"Use the migration-harness skill and read EXECUTION.md in its directory. Execute Phase C for tasks ${list} from ${TASKS_FILE}, IN ORDER. These are rewrite-class mechanical tasks — the plan states the exact transformation for each; apply it directly per the EXECUTION.md rewrite discipline. For EACH task finish with ONE commit whose message STARTS with that task's id and a colon (e.g. 'T-004:') BEFORE starting the next task. Stop after the last listed task.
+"Use the migration-harness skill and read EXECUTION.md in its directory. Execute M4 for tasks ${list} from ${TASKS_FILE}, IN ORDER. These are rewrite-class mechanical tasks — the plan states the exact transformation for each; apply it directly per the EXECUTION.md rewrite discipline. For EACH task finish with ONE commit whose message STARTS with that task's id and a colon (e.g. 'T-004:') BEFORE starting the next task. Stop after the last listed task.
 ${RUN_CONTRACT}"
   fi
   # Anything the batch session missed falls back to the single-task stage;
@@ -507,8 +519,8 @@ for T in $TASK_IDS; do
 done
 flush_batch "$BATCH"; BATCH=""
 
-# ---------------------------------------------------------------- Phase D
-if ! committed "Phase D"; then
+# ---------------------------------------------------------------- M5 evaluate
+if ! committed "M5 evaluate"; then
   # Harness owns BOTH ends of the analysis (S01 lesson: sessions lack the
   # Java 21 export and wedge on kantra) — the after-analysis is a script
   # step; the session interprets the delta, it never runs analysis tools.
@@ -520,17 +532,17 @@ if ! committed "Phase D"; then
     /tmp/kantra/kantra analyze -i /projects/modernized -o /tmp/kantra-after \
     $K_ARGS --mode source-only --json-output --overwrite) >> "$LOG" 2>&1 \
     && cp /tmp/kantra-after/output.json migration/mta-findings-after.json 2>/dev/null \
-    && log "Phase D: after-analysis complete (script step)" \
-    || log "WARN: after-analysis failed — Phase D proceeds without the delta"
-  run_stage "Phase D" "phaseD" \
-"Use the migration-harness skill and read SHIPPING.md in its directory. All tasks are executed (see migration/run-log.md and migration/debt.md). Execute Phase D per SHIPPING.md. The harness ALREADY RAN the after-analysis: migration/mta-findings-after.json (use .hermes/skills/migration-harness/scripts/extract_findings.py to summarize it — do NOT run analysis tools yourself). Append the findings delta to the run-log with every remaining finding individually explained (resolved here / owned by a later story / genuine debt), and verify mvn -q clean verify green.
+    && log "M5 evaluate: after-analysis complete (script step)" \
+    || log "WARN: after-analysis failed — M5 evaluate proceeds without the delta"
+  run_stage "M5 evaluate" "m5-evaluate" \
+"Use the migration-harness skill and read SHIPPING.md in its directory. All tasks are executed (see migration/run-log.md and migration/debt.md). Execute M5 evaluate per SHIPPING.md. The harness ALREADY RAN the after-analysis: migration/mta-findings-after.json (use .hermes/skills/migration-harness/scripts/extract_findings.py to summarize it — do NOT run analysis tools yourself). Append the findings delta to the run-log with every remaining finding individually explained (resolved here / owned by a later story / genuine debt), and verify mvn -q clean verify green.
 ${RUN_CONTRACT}
-Commit prefix: 'Phase D:'. DO NOT PUSH." \
-"Use the migration-harness skill and read SHIPPING.md in its directory. Execute Phase D per the skill; a previous attempt did not commit. Verify migration/mta-findings-after.json and the delta section exist, mvn -q clean verify passes, then commit with message starting 'Phase D:'. ${RUN_CONTRACT}" \
-    || log "Phase D: exhausted — shipping without final re-analysis commit"
+Commit prefix: 'M5 evaluate:'. DO NOT PUSH." \
+"Use the migration-harness skill and read SHIPPING.md in its directory. Execute M5 evaluate per the skill; a previous attempt did not commit. Verify migration/mta-findings-after.json and the delta section exist, mvn -q clean verify passes, then commit with message starting 'M5 evaluate:'. ${RUN_CONTRACT}" \
+    || log "M5 evaluate: exhausted — shipping without final re-analysis commit"
 fi
 
-# ---------------------------------------------------------------- Phase E
+# ---------------------------------------------------------------- M5 ship
 NS=$(grep -rhoE '^\s*namespace:\s*\S+' k8s/*.y*ml 2>/dev/null | head -1 | awk '{print $2}')
 [ -n "$NS" ] || NS="$(basename $(git remote get-url origin) .git)-dev"
 SONAR_URL="${SONAR_URL:-http://sonarqube.sonarqube.svc:9000}"
@@ -571,7 +583,7 @@ gate_violations() { # writes /tmp/gate-violations.txt; echoes count
     --out /tmp/gate-violations.txt --coverage 2>/dev/null || echo 0
 }
 
-log "Phase E: shipping (namespace=$NS, sonar key=$SONAR_KEY)"
+log "M5 ship: shipping (namespace=$NS, sonar key=$SONAR_KEY)"
 BUILD_R=0; GATE_R=0; DEPLOY_R=0; PREF_R=0
 MAX_PER_CLASS=2
 LAST_PUSHED=""
@@ -582,10 +594,10 @@ LAST_PUSHED=""
 # pre-push preflight gates it and the factory arbitrates.
 round_exhausted() { # $1=class; 0 = continue the ship loop, 1 = stop
   if [ "$(git rev-parse HEAD)" != "$LAST_PUSHED" ]; then
-    log "Phase E: ${1}-fix round exhausted but new commits exist — re-entering the ship loop"
+    log "M5 ship: ${1}-fix round exhausted but new commits exist — re-entering the ship loop"
     return 0
   fi
-  log "Phase E: ${1}-fix round exhausted with nothing new to ship"
+  log "M5 ship: ${1}-fix round exhausted with nothing new to ship"
   return 1
 }
 while :; do
@@ -597,31 +609,31 @@ while :; do
   if ! .hermes/harness/sensors.sh preflight > /tmp/preflight-failure.txt 2>&1; then
     PREF_R=$((PREF_R+1))
     if [ "$PREF_R" -le "$MAX_PER_CLASS" ]; then
-      log "Phase E: pre-push preflight RED (round $PREF_R) — fixing before push"
-      event "phaseE" 0 "preflight_red" "round=$PREF_R"
+      log "M5 ship: pre-push preflight RED (round $PREF_R) — fixing before push"
+      event "m5-ship" 0 "preflight_red" "round=$PREF_R"
       run_stage "Preflight fix r${PREF_R}" "preflightfix-r${PREF_R}" \
 "Use the migration-harness skill and read SHIPPING.md in its directory. The pre-push preflight is RED - the failure evidence is in /tmp/preflight-failure.txt, read it with your file tools. Fix the root cause (build wiring against the WORKING scaffold pom conventions; coverage gaps need real tests for the uncovered classes - never weaken assertions). Finish with .hermes/harness/sensors.sh preflight GREEN, then commit ONE commit. DO NOT PUSH.
 ${RUN_CONTRACT}
 Commit prefix: 'Preflight fix r${PREF_R}:'." \
 "Use the migration-harness skill and read SHIPPING.md in its directory. Continue preflight-correction round ${PREF_R}; inspect git status and /tmp/preflight-failure.txt, finish the root-cause fix, run .hermes/harness/sensors.sh preflight until GREEN, and commit ONE commit starting 'Preflight fix r${PREF_R}:'. DO NOT PUSH.
 ${RUN_CONTRACT}" \
-        || log "Phase E: preflight-fix round $PREF_R did not converge"
+        || log "M5 ship: preflight-fix round $PREF_R did not converge"
       continue
     fi
-    log "Phase E: preflight budget exhausted — pushing anyway (factory as arbiter)"
+    log "M5 ship: preflight budget exhausted — pushing anyway (factory as arbiter)"
   fi
   PREV=$(newest_pipelinerun)
   git push origin main >> "$LOG" 2>&1 || { log "FATAL: git push failed"; write_run_report "push-failed"; echo push-failed > /tmp/supervisor-done; exit 1; }
   LAST_PUSHED=$(git rev-parse HEAD)
-  log "Phase E: pushed $(git rev-parse --short HEAD), waiting for pipeline"
+  log "M5 ship: pushed $(git rev-parse --short HEAD), waiting for pipeline"
   RESULT=$(wait_pipeline "$PREV"); PR_NAME=${RESULT% *}; PR_ST=${RESULT#* }
-  event "phaseE" 0 "pipeline_$PR_ST" "$PR_NAME"
-  log "Phase E: pipeline $PR_NAME -> $PR_ST"
+  event "m5-ship" 0 "pipeline_$PR_ST" "$PR_NAME"
+  log "M5 ship: pipeline $PR_NAME -> $PR_ST"
   if [ "$PR_ST" = "succeeded" ]; then
     # Non-deploy story (M5 hybrid shipping): the factory quality gate IS
     # the story's finish line — no acceptance surface expected yet.
     if [ "$STORY_DEPLOY" != "true" ]; then
-      event "phaseE" 0 "story_gate_pass" "non-deploy story"
+      event "m5-ship" 0 "story_gate_pass" "non-deploy story"
       write_run_report "story gate passed (non-deploy story): pipeline + quality gate green"
       phase_f_retro
       git push origin main >> "$LOG" 2>&1 || true
@@ -640,9 +652,9 @@ ${RUN_CONTRACT}" \
     CODE=$(curl -sk -o /dev/null -w "%{http_code}" "https://${ROUTE}/" 2>/dev/null || echo 000)
     ACC=$(curl -sk -o /dev/null -w "%{http_code}" "https://${ROUTE}${ACC_PATH}" 2>/dev/null || echo 000)
     PRODUCTS=$(curl -sk "https://${ROUTE}${ACC_PATH}" 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d) if isinstance(d,list) else 1)" 2>/dev/null || echo 0)
-    log "Phase E: route / -> ${CODE}; ${ACC_PATH} -> HTTP ${ACC} (${PRODUCTS} items)"
+    log "M5 ship: route / -> ${CODE}; ${ACC_PATH} -> HTTP ${ACC} (${PRODUCTS} items)"
     if [ "$CODE" = "200" ] && [ "$ACC" = "200" ] && [ "${PRODUCTS:-0}" -gt 0 ]; then
-      event "phaseE" 0 "acceptance_pass" "route=${CODE},products=${PRODUCTS}"
+      event "m5-ship" 0 "acceptance_pass" "route=${CODE},products=${PRODUCTS}"
       write_run_report "success: shipped, route 200, ${PRODUCTS} products"
       phase_f_retro
       git push origin main >> "$LOG" 2>&1 || true
@@ -650,7 +662,7 @@ ${RUN_CONTRACT}" \
       log "SUPERVISOR COMPLETE: migration shipped and accepted"
       exit 0
     fi
-    log "Phase E: pipeline green but ACCEPTANCE failed (/ ${CODE}, products ${PRODUCTS}) — deploy-correction round"
+    log "M5 ship: pipeline green but ACCEPTANCE failed (/ ${CODE}, products ${PRODUCTS}) — deploy-correction round"
     {
       echo "Acceptance failure: pipeline green but the demo acceptance is unmet."
       echo "Route / returned HTTP ${CODE} (need 200 — an index page must exist)."
@@ -660,26 +672,26 @@ ${RUN_CONTRACT}" \
     FAILED_TASK="acceptance-deploy"
   else
     FAILED_TASK=$(OC get taskrun -n "$NS" -l tekton.dev/pipelineRun="$PR_NAME"       -o jsonpath='{range .items[?(@.status.conditions[0].status=="False")]}{.metadata.name}{"\n"}{end}' 2>/dev/null | head -1)
-    log "Phase E: failed pipeline task: ${FAILED_TASK:-unknown}"
+    log "M5 ship: failed pipeline task: ${FAILED_TASK:-unknown}"
   fi
   if [[ "$FAILED_TASK" == *maven-build* || "$FAILED_TASK" == *build-and-push* ]]; then
     CLASS=build; BUILD_R=$((BUILD_R+1)); ROUND=$BUILD_R
-    [ $BUILD_R -gt $MAX_PER_CLASS ] && { log "Phase E: build round budget exhausted"; break; }
+    [ $BUILD_R -gt $MAX_PER_CLASS ] && { log "M5 ship: build round budget exhausted"; break; }
     {
       echo "Build-stage failure for pipeline $PR_NAME (task: $FAILED_TASK)."
       echo "--- maven/build errors ---"
       OC logs -n "$NS" -l tekton.dev/taskRun="$FAILED_TASK" --tail=80 2>/dev/null | grep -iE "ERROR|BUILD|Caused|Could not" | head -30
     } > /tmp/build-failure.txt
     run_stage "Build fix r${ROUND}" "buildfix-r${ROUND}" \
-"Use the migration-harness skill and read SHIPPING.md in its directory. Execute the Phase E BUILD-correction procedure for round ${ROUND}: the failure evidence is in /tmp/build-failure.txt - read it with your file tools and follow SHIPPING.md for this correction class. Finish with .hermes/harness/sensors.sh preflight GREEN before committing.
+"Use the migration-harness skill and read SHIPPING.md in its directory. Execute the M5 ship BUILD-correction procedure for round ${ROUND}: the failure evidence is in /tmp/build-failure.txt - read it with your file tools and follow SHIPPING.md for this correction class. Finish with .hermes/harness/sensors.sh preflight GREEN before committing.
 ${RUN_CONTRACT}
 Commit prefix: 'Build fix r${ROUND}:'." \
-"Use the migration-harness skill and read SHIPPING.md in its directory. Continue Phase E build-correction round ${ROUND}; inspect git status and /tmp/build-failure.txt, finish the root-cause fix, run .hermes/harness/sensors.sh preflight, and commit ONE commit starting 'Build fix r${ROUND}:'. DO NOT PUSH.
+"Use the migration-harness skill and read SHIPPING.md in its directory. Continue M5 ship build-correction round ${ROUND}; inspect git status and /tmp/build-failure.txt, finish the root-cause fix, run .hermes/harness/sensors.sh preflight, and commit ONE commit starting 'Build fix r${ROUND}:'. DO NOT PUSH.
 ${RUN_CONTRACT}" \
       || { round_exhausted build || break; continue; }
   elif [[ "$FAILED_TASK" == *deploy* ]]; then
     CLASS=deploy; DEPLOY_R=$((DEPLOY_R+1)); ROUND=$DEPLOY_R
-    [ $DEPLOY_R -gt $MAX_PER_CLASS ] && { log "Phase E: deploy round budget exhausted"; break; }
+    [ $DEPLOY_R -gt $MAX_PER_CLASS ] && { log "M5 ship: deploy round budget exhausted"; break; }
     if [ "$FAILED_TASK" != "acceptance-deploy" ]; then
       APP=$(OC get pods -n "$NS" -o jsonpath='{range .items[*]}{.metadata.name} {.status.phase} {.status.containerStatuses[0].state.waiting.reason}{"\n"}{end}' 2>/dev/null \
         | grep -E "CrashLoopBackOff|Error" | head -1 | awk '{print $1}')
@@ -692,22 +704,22 @@ ${RUN_CONTRACT}" \
       } > /tmp/deploy-failure.txt
     fi
     run_stage "Deploy fix r${ROUND}" "deployfix-r${ROUND}" \
-"Use the migration-harness skill and read SHIPPING.md in its directory. Execute the Phase E DEPLOY-correction procedure for round ${ROUND}: the failure evidence is in /tmp/deploy-failure.txt - read it with your file tools and follow SHIPPING.md for this correction class. Finish with .hermes/harness/sensors.sh preflight GREEN before committing.
+"Use the migration-harness skill and read SHIPPING.md in its directory. Execute the M5 ship DEPLOY-correction procedure for round ${ROUND}: the failure evidence is in /tmp/deploy-failure.txt - read it with your file tools and follow SHIPPING.md for this correction class. Finish with .hermes/harness/sensors.sh preflight GREEN before committing.
 ${RUN_CONTRACT}
 Commit prefix: 'Deploy fix r${ROUND}:'." \
-"Use the migration-harness skill and read SHIPPING.md in its directory. Continue Phase E deploy-correction round ${ROUND}; inspect git status and /tmp/deploy-failure.txt, finish the root-cause fix, run .hermes/harness/sensors.sh preflight, and commit ONE commit starting 'Deploy fix r${ROUND}:'. DO NOT PUSH.
+"Use the migration-harness skill and read SHIPPING.md in its directory. Continue M5 ship deploy-correction round ${ROUND}; inspect git status and /tmp/deploy-failure.txt, finish the root-cause fix, run .hermes/harness/sensors.sh preflight, and commit ONE commit starting 'Deploy fix r${ROUND}:'. DO NOT PUSH.
 ${RUN_CONTRACT}" \
       || { round_exhausted deploy || break; continue; }
   else
     CLASS=gate; GATE_R=$((GATE_R+1)); ROUND=$GATE_R
-    [ $GATE_R -gt $MAX_PER_CLASS ] && { log "Phase E: gate round budget exhausted"; break; }
+    [ $GATE_R -gt $MAX_PER_CLASS ] && { log "M5 ship: gate round budget exhausted"; break; }
     N=$(gate_violations)
-    log "Phase E: gate round $ROUND — $N new violations exported to /tmp/gate-violations.txt"
+    log "M5 ship: gate round $ROUND — $N new violations exported to /tmp/gate-violations.txt"
     run_stage "Gate fix r${ROUND}" "gatefix-r${ROUND}" \
-"Use the migration-harness skill and read SHIPPING.md in its directory. Execute the Phase E GATE-correction procedure for round ${ROUND}: the failure evidence is in /tmp/gate-violations.txt - read it with your file tools and follow SHIPPING.md for this correction class. Finish with .hermes/harness/sensors.sh milestone GREEN before committing (it runs the factory's own sonar gate locally - iterate until it passes).
+"Use the migration-harness skill and read SHIPPING.md in its directory. Execute the M5 ship GATE-correction procedure for round ${ROUND}: the failure evidence is in /tmp/gate-violations.txt - read it with your file tools and follow SHIPPING.md for this correction class. Finish with .hermes/harness/sensors.sh milestone GREEN before committing (it runs the factory's own sonar gate locally - iterate until it passes).
 ${RUN_CONTRACT}
 Commit prefix: 'Gate fix r${ROUND}:'." \
-"Use the migration-harness skill and read SHIPPING.md in its directory. Continue Phase E gate-correction round ${ROUND}; inspect git status, finish the remaining violations from /tmp/gate-violations.txt, run .hermes/harness/sensors.sh milestone until GREEN, and commit ONE commit starting 'Gate fix r${ROUND}:'. DO NOT PUSH.
+"Use the migration-harness skill and read SHIPPING.md in its directory. Continue M5 ship gate-correction round ${ROUND}; inspect git status, finish the remaining violations from /tmp/gate-violations.txt, run .hermes/harness/sensors.sh milestone until GREEN, and commit ONE commit starting 'Gate fix r${ROUND}:'. DO NOT PUSH.
 ${RUN_CONTRACT}" \
       || { round_exhausted gate || break; continue; }
   fi

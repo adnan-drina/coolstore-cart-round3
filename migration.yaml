@@ -16,6 +16,13 @@ analysis:
   # (we deploy to OpenShift), and the JDK jump. Applies to the IDE
   # analysis AND the supervisor's kantra fallback.
   targets: [quarkus, jakarta-ee9, cloud-readiness, openjdk17]
+targetContract:
+  # Decided modern contract for REDESIGN classes (M1 §7 authoritative).
+  getIdempotent: true
+  validateInput: true
+  mapErrors: true
+  threadSafeState: true
+  cacheRefreshGuard: true
 preserve:
   # Enforced: plan-lint maps each item to a task; the preflight sensor
   # greps them in src/main|pom|k8s. Erasing one is a functional

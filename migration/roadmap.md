@@ -1,9 +1,0 @@
-# Modernization roadmap
-
-## S01: Cart service end-to-end modernization
-- scope: com.redhat.coolstore.model.Product, com.redhat.coolstore.model.Promotion, com.redhat.coolstore.CartServiceApplication, com.redhat.coolstore.model.ShoppingCartItem, com.redhat.coolstore.service.CatalogService, com.redhat.coolstore.model.ShoppingCart, com.redhat.coolstore.service.ShoppingCartService, com.redhat.coolstore.service.PromoService, com.redhat.coolstore.service.ShippingService, com.redhat.coolstore.rest.CartEndpoint, com.redhat.coolstore.service.ShoppingCartServiceImpl, com.redhat.coolstore.rest.JerseyConfig, pom.xml
-- findings: springboot-di-to-quarkus-00003, spring-components-00001, spring-components-00002, localhost-http-00001, demo-env-integration-00001, jakarta-jaxrs-to-quarkus-00010, javaee-pom-to-quarkus-00010, javaee-pom-to-quarkus-00020, javaee-pom-to-quarkus-00030, javaee-pom-to-quarkus-00040, javaee-pom-to-quarkus-00050, javaee-pom-to-quarkus-00060, javaee-pom-to-quarkus-00080, removed-javaee-modules-00020, springboot-actuator-to-quarkus-0100, springboot-annotations-to-quarkus-00000, springboot-di-to-quarkus-00000, springboot-metrics-to-quarkus-0100, springboot-metrics-to-quarkus-0200, springboot-parent-pom-to-quarkus-00000, springboot-plugins-to-quarkus-0000, springboot-properties-to-quarkus-00000, springboot-web-to-quarkus-00000
-- depends: -
-- deploy: true
-- done: complete cart service modernization with Quarkus platform, native CDI, quarkus-rest, and SmallRye Health; all endpoints functional with preserved pricing contracts; CATALOG_ENDPOINT environment variable preserved; factory quality gate green
-- rationale: Single bounded context with tight pricing orchestration coupling across all 12 classes; dependency-order.md sequence requires models→services→endpoints conversion in one atomic unit to maintain functional equivalence; god nodes (ShoppingCart, Product) require characterization tests before conversion per dependency-order.md §6-13

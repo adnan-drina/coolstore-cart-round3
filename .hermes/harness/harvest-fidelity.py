@@ -36,7 +36,13 @@ def normalize(text):
         if s.startswith("import "):
             # imports move with transforms; compare the set separately? keep simple: skip
             continue
-        out.append(re.sub(r"\s+", " ", s))
+        s = re.sub(r"\s+", " ", s)
+        # Token-normalize spacing around structural punctuation (V4 finding
+        # #5: legacy `if ( x )` reformatted to `if (x)` during conversion
+        # flagged as drift though behavior is identical). Collapse spaces
+        # adjacent to ()[]{};, so token-equivalent lines compare equal.
+        s = re.sub(r"\s*([(){}\[\];,])\s*", r"\1", s)
+        out.append(s)
     return out
 
 
@@ -76,6 +82,8 @@ def main():
                     problems += 1
     if problems:
         print(f"HARVEST FIDELITY RED: {problems} drifted lines (approved transforms: package, whitespace, comments, annotations, diamond)")
+        print("FIX: Re-harvest from migration/staging; do not rewrite constants/serialVersionUID in a fix session.")
+        print("     Hardening stories that deliberately diverge: FIDELITY_CHECK=off or /tmp/fidelity-off.")
         return 1
     print("harvest fidelity GREEN")
     return 0

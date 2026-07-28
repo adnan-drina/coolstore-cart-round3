@@ -4,13 +4,13 @@
 #
 # "Green in the workspace" must mean "green in the factory": every sensor
 # here reproduces a pipeline stage locally so defects die at the task that
-# introduces them, not in Phase E rounds.
+# introduces them, not in M5 ship rounds.
 #
 #   sensors.sh seed        one-time per run: seed the isolated Maven repo
 #   sensors.sh task        after every sub-fix: clean test, isolated repo
 #   sensors.sh milestone   pom/config changes + every 3-4 tasks:
 #                          clean verify (isolated) + new-code sonar check
-#   sensors.sh preflight   Phase D exit: verify + sonar + container-profile
+#   sensors.sh preflight   M5 evaluate exit: verify + sonar + container-profile
 #                          boot against the dev PostgreSQL (schema drift)
 #
 # Exit 0 = green. Non-zero = red, with the failure summarized on stdout.
@@ -20,6 +20,10 @@
 set -uo pipefail
 export JAVA_HOME="${JAVA_HOME_21:-${JAVA_HOME:-}}"
 export PATH="${JAVA_HOME}/bin:${PATH}"
+# Resolve the harness dir from this script's own location so helper
+# scripts are found regardless of cwd (the instrument suite runs with
+# SENSOR_ROOT pointing at a fixture tree that has no .hermes/harness).
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # SENSOR_ROOT override exists for the instrument test suite (X1), which
 # runs the static checks against fixture trees.
 cd "${SENSOR_ROOT:-/projects/modernized}"
@@ -31,7 +35,93 @@ SONAR_HOST="${SONAR_HOST:-http://sonarqube.sonarqube.svc:9000}"
 PROJECT_KEY="$(basename "$(git remote get-url origin 2>/dev/null || echo fixture)" .git)"
 DEV_DB_URL="${DEV_DB_URL:-jdbc:postgresql://coolstore-postgres.${PROJECT_KEY}-dev.svc:5432/coolstore}"
 
-fail() { echo "SENSOR RED ($1): $2"; exit 1; }
+# Self-correction guidance after the evidence line (Böckeler: sensors should
+# inject how-to-fix context, not only the raw failure). First line always
+# stays "SENSOR RED (<kind>): …" — instrument tests and correction packets
+# match on that prefix / kind token.
+guide_for() {
+  case "$1" in
+    forbidden)
+      cat <<'EOF'
+FIX: Delete the fabricated fallback from src/main (call the real integration
+or fail closed). Do not edit migration.yaml forbidden: to waive. See
+.hermes/skills/migration-harness/SHIPPING.md (fabrication class).
+EOF
+      ;;
+    preserve)
+      cat <<'EOF'
+FIX: Restore the preserve: token into src/main, pom.xml, or k8s/ (env key,
+config property, or client URL). An erased integration is a silent functional
+regression. Check migration.yaml preserve: and PLANNING.md preserve coverage.
+EOF
+      ;;
+    hygiene)
+      cat <<'EOF'
+FIX: Remove or rename illegal paths under src/ (literal glob chars, spaces,
+or quoted junk filenames). Re-harvest/rewrite the intended .java files with
+real names — empty '*.java' files compile locally and fail the factory.
+EOF
+      ;;
+    wiring)
+      cat <<'EOF'
+FIX: Restore scaffold pom conventions (jacoco-maven-plugin,
+sonar.coverage.jacoco.xmlReportPaths, pinned maven-compiler-plugin version)
+and/or add @RestClient next to @Inject for @RegisterRestClient interfaces.
+Losing wiring makes the factory coverage/compile gate fail while local builds
+look green. Diff against the scaffold pom / SHIPPING.md gate notes.
+EOF
+      ;;
+    fidelity)
+      cat <<'EOF'
+FIX: Re-harvest from migration/staging (approved transforms only: package,
+whitespace, comments, annotations, diamond). Do not rewrite constants or
+serialVersionUID in a "fix" session. Hardening stories that deliberately
+diverge: set FIDELITY_CHECK=off (or touch /tmp/fidelity-off) — the brief is
+authority, not staging.
+EOF
+      ;;
+    task|milestone)
+      cat <<'EOF'
+FIX: Read the sensor log cited above. Prefer root-cause (missing harvest
+dependency, wrong package, broken test) over silencing assertions. Re-run
+.hermes/harness/sensors.sh task until GREEN, then commit. See EXECUTION.md.
+EOF
+      ;;
+    sonar)
+      cat <<'EOF'
+FIX: Resolve each listed new-code violation (or coverage gap at preflight) with
+real code/tests — never weaken assertions or drop jacoco wiring. In-loop gate
+is violations-only; full coverage is preflight/factory. See SHIPPING.md.
+EOF
+      ;;
+    boot)
+      cat <<'EOF'
+FIX: Read /tmp/sensor-boot.log (and /tmp/sensor-package.log if package failed).
+Typical causes: schema drift, missing Flyway migration, CDI UnsatisfiedResolution
+(@RestClient), bad datasource URL. Fix root cause, then sensors.sh preflight.
+EOF
+      ;;
+    seed)
+      cat <<'EOF'
+FIX: Inspect /tmp/sensor-seed.log. The isolated Maven repo must build the
+current tree once before task sensors are meaningful. Fix compile/test
+failures, remove /tmp/m2-run if corrupt, re-run sensors.sh seed.
+EOF
+      ;;
+    *)
+      cat <<'EOF'
+FIX: Diagnose from the evidence above; run the same sensors.sh mode until
+GREEN; commit one sensor-fix commit. Do not push — the supervisor ships.
+EOF
+      ;;
+  esac
+}
+
+fail() {
+  echo "SENSOR RED ($1): $2"
+  guide_for "$1"
+  exit 1
+}
 
 yaml_items() { # $1 = top-level key; prints its list items, section-bounded.
   # grep -A<N> overreads into the NEXT yaml section (X1 suite catch: a
@@ -56,8 +146,7 @@ forbidden_patterns() {
   yaml_items forbidden | while read -r pat; do
     [ -n "$pat" ] || continue
     if grep -rq "$pat" src/main 2>/dev/null; then
-      echo "SENSOR RED (forbidden): pattern '$pat' found in src/main: $(grep -rl "$pat" src/main | head -2 | tr '\n' ' ')"
-      exit 1
+      fail forbidden "pattern '$pat' found in src/main: $(grep -rl "$pat" src/main | head -2 | tr '\n' ' ')"
     fi
   done || exit 1
 }
@@ -130,16 +219,16 @@ sonar_check() { # $1 = inloop|full  (default full)
 }
 
 milestone_sensor() { # $1 = inloop|full (default inloop)
-  # Harvest fidelity first (cheap, pure python): staged legacy classes
-  # must survive into the destination modulo approved transforms
+  # Harvest fidelity first (cheap, pure python): staged legacy HARVEST
+  # classes must survive into the destination modulo approved transforms
   # (V3 catch: a fix session silently rewrote a serialVersionUID).
-  # FIDELITY_CHECK=off waives it for hardening stories (S03 lesson:
-  # they deliberately depart from the staged legacy — the brief, not
-  # staging, is their design authority). /tmp/fidelity-off is the
-  # live-run bridge for an already-running supervisor (pause-flag
-  # pattern; env cannot be injected into a running loop).
+  # REDESIGN classes are exempt by the discriminator, so fidelity is on
+  # for every story. FIDELITY_CHECK=off / /tmp/fidelity-off is a MANUAL
+  # operator override for a known false positive that is wedging a live
+  # run (the live-run bridge; env cannot be injected into a running loop)
+  # — not a per-story mode.
   if [ "${FIDELITY_CHECK:-on}" = "off" ] || [ -f /tmp/fidelity-off ]; then
-    echo "fidelity check WAIVED (hardening story)"
+    echo "fidelity check WAIVED (operator override)"
   else
     python3 .hermes/harness/harvest-fidelity.py \
       || fail fidelity "harvested class drifted from staged legacy source (see FIDELITY lines)"
@@ -203,9 +292,15 @@ wiring_invariants() {
       window=$(sed -n "${start},${ln}p" "$f2")
       echo "$window" | grep -q "@Inject" || continue
       echo "$window" | grep -q "@RestClient" \
-        || { echo "SENSOR RED (wiring): ${f2}:${ln} injects $iface without @RestClient qualifier (CDI UnsatisfiedResolution at boot)"; exit 1; }
+        || fail wiring "${f2}:${ln} injects $iface without @RestClient qualifier (CDI UnsatisfiedResolution at boot)"
     done || exit 1
   done
+  # Behavior-preserving target default (PROCESS-FIX #1): a CDI singleton
+  # with shared mutable state must use a concurrent collection or confine
+  # mutation to init — the S03 T-001 / V4 finding #1 thread-safety class,
+  # caught deterministically in-loop instead of by post-ship review.
+  OUT=$(python3 "$SELF_DIR/wiring-check.py" src/main/java 2>/dev/null) \
+    || fail wiring "$(echo "$OUT" | head -3)"
 }
 
 preserved_integrations() {
@@ -222,7 +317,7 @@ preserved_integrations() {
   yaml_items preserve | while read -r item; do
     [ -n "$item" ] || continue
     grep -rq "$item" src/main pom.xml k8s/ 2>/dev/null \
-      || { echo "SENSOR RED (preserve): preserved integration '$item' absent from src/main, pom.xml and k8s/"; exit 1; }
+      || fail preserve "preserved integration '$item' absent from src/main, pom.xml and k8s/"
   done || exit 1
 }
 
@@ -234,13 +329,38 @@ preflight() {
   echo "PREFLIGHT GREEN — the factory should confirm, not discover"
 }
 
+fidelity_check() {
+  # Standalone harvest-fidelity (the cheap dimension-specific recheck for a
+  # fidelity-triggered sfix — pure python, no Maven).
+  if [ "${FIDELITY_CHECK:-on}" = "off" ] || [ -f /tmp/fidelity-off ]; then
+    echo "fidelity check WAIVED"; return 0
+  fi
+  python3 .hermes/harness/harvest-fidelity.py \
+    || fail fidelity "harvested class drifted from staged legacy source (see FIDELITY lines)"
+  echo "fidelity check GREEN"
+}
+
+sonar_only() {
+  # Cheap dimension-specific recheck for a sonar-triggered sfix (V4 finding
+  # #1: fix loops ran full `mvn clean verify` per iteration, ~5100s of the
+  # run). Assumes compile/test already green — verify that with `task`
+  # separately if unsure. Compiles test-classes only (sonar needs them) and
+  # runs the new-code gate, skipping the full verify.
+  $MVN test-compile > /tmp/sensor-sonar.log 2>&1 \
+    || fail sonar "test-compile failed before sonar — /tmp/sensor-sonar.log"
+  sonar_check inloop
+  echo "sonar-only check GREEN (no full verify)"
+}
+
 case "${1:-}" in
   seed)      seed;;
   task)      task_sensor;;
   milestone) milestone_sensor;;
+  sonar)     sonar_only;;
+  fidelity)  fidelity_check;;
   preflight) preflight;;
   # static: every check that needs no Maven/JVM — used by the X1
   # instrument test suite (tests/instruments.bats) against fixture trees.
   static)    tree_hygiene; forbidden_patterns; wiring_invariants; preserved_integrations; echo "STATIC CHECKS GREEN";;
-  *) echo "usage: sensors.sh seed|task|milestone|preflight|static"; exit 2;;
+  *) echo "usage: sensors.sh seed|task|milestone|sonar|fidelity|preflight|static"; exit 2;;
 esac

@@ -1,8 +1,8 @@
-# Phase C — the execution loop
+# M4 — the execution loop
 
 ## Contents
 - Task packet schema
-- Phase C procedure (rewrite and infer tasks)
+- M4 procedure (rewrite and infer tasks)
 - Dispatch rules (synchronous, packet size, packet content)
 - Sensors and quality-gate bars
 - Budget, escalation valve, and debt policy
@@ -20,7 +20,7 @@ Acceptance:     <files expected to change>; mvn -q clean test passes
 Out of scope:   <explicitly excluded work>
 ```
 
-## Phase C — execution loop
+## M4 — execution loop
 
 ### Batched rewrite sessions
 
@@ -29,6 +29,20 @@ ONE session. The contract does not relax: execute them in the listed
 order, and finish each task with its own commit (its exact `T-0XX:`
 prefix) before starting the next — never one combined commit. Every
 per-task rule below applies to each task in the batch.
+
+### Redesign classes are built to their target, not to legacy
+
+For a REDESIGN class (service, endpoint, REST client, config — see
+architecture-profile §7 and the brief), implement the §7 TARGET contract
+from the first commit: thread-safe singleton state (`ConcurrentHashMap` +
+`compute()`), cache refresh-guard, read-only GET (404 on missing),
+input validation (→400), error mapping (→503) — the MAPPINGS
+"Production-grade defaults" shapes. This is not "harden later"; it IS the
+conversion. Behavior-preserving shapes (thread-safety, cache, error path)
+are non-negotiable defaults; behavior-changing shapes (GET→404, invalid→400)
+are exactly what §7 / the brief decided, and the tests pin those targets.
+HARVEST classes (models, DTOs, utilities) stay faithful — fidelity applies,
+tests pin legacy values.
 
 ### Story scope is a hard boundary
 
@@ -196,7 +210,7 @@ If the task touched `pom.xml`, `application.properties`, or any other
 build/runtime configuration — and on every milestone boundary (3–4
 tasks) — escalate to `.hermes/harness/sensors.sh milestone` (isolated
 clean verify PLUS the factory's own new-code sonar gate, so style
-violations die here, not in Phase E rounds):
+violations die here, not in M5 ship rounds):
 the factory runs the full Quarkus package build, whose extension
 processors enforce prod-mode requirements (e.g. Hibernate ORM demands a
 configured default datasource) that `clean test` never exercises —
