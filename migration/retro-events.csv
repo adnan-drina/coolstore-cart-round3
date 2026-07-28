@@ -7,3 +7,30 @@ epoch,stage,attempt,class,action
 1785257205,m5-evaluate,1,success,commit
 1785257402,m5-ship,0,pipeline_succeeded,coolstore-cart-round3-push-7mmhl
 1785257402,m5-ship,0,story_gate_pass,non-deploy story
+1785258517,T-004,1,success,commit
+1785258848,T-005,1,success,commit
+1785258848,T-005,0,sensor_red_post_commit,verify
+1785259232,T-005,0,sfix_committed_still_red,verify
+1785259455,T-006,1,success,commit
+1785259748,T-007,1,orphan_worker,retrying
+1785259874,T-007,1,success,commit
+1785260176,m5-evaluate,1,no_commit,retrying
+1785260841,m5-evaluate,2,success,commit
+1785260841,scope,0,scope_violation,src/main/java/com/demo/model/Product.java src/main/java/com/demo/model/Promotion.java src/main/java/com/demo/model/ShoppingCart.java src/main/java/com/demo/model/ShoppingCartItem.java
+1785260841,m5-evaluate,0,sensor_red_post_commit,verify
+1785263477,loop-entry,0,sensor_red_at_entry,verify
+1785266608,batch-T-001-T-002-T-003,0,slow_session,2703s
+1785267201,T-004,1,success,commit
+1785267201,scope,0,scope_violation,src/main/java/com/demo/model/ShoppingCart.java src/main/java/com/demo/model/ShoppingCartItem.java
+1785267439,T-005,1,success,commit
+1785267439,T-005,0,sensor_red_post_commit,verify
+1785269365,loop-entry,0,sensor_red_at_entry,verify
+1785270507,T-005,1,success,commit
+1785270830,T-006,1,success,commit
+1785271172,T-007,1,success,commit
+1785271312,T-007,0,sensor_red_post_commit,verify
+1785272511,T-007,0,sfix_committed_still_red,verify
+1785272511,T-007,0,debt_recorded,milestone
+1785273008,m5-evaluate,1,success,commit
+1785273186,m5-ship,0,pipeline_succeeded,coolstore-cart-round3-push-7tk6m
+1785273186,m5-ship,0,story_gate_pass,non-deploy story
