@@ -9,7 +9,7 @@ migration:
   provisionedBy: app-migration golden-path template
 acceptance:
   # The harness supervisor asserts this after deploy (Phase E success).
-  path: /api/cart/acceptance-check
+  path: /cart/acceptance-check
   needsDatabase: false
 analysis:
   # MTA rule selection is LABEL FILTERING (--source/--target pick only

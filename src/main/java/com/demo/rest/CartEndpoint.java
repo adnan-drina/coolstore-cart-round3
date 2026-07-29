@@ -19,7 +19,7 @@ import com.demo.model.ShoppingCart;
 import com.demo.service.ShoppingCartService;
 
 @ApplicationScoped
-@Path("/api/cart")
+@Path("/cart")
 public class CartEndpoint implements Serializable {
 
     private static final long serialVersionUID = -7227732980791688773L;
