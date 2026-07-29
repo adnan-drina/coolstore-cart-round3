@@ -1,9 +1,14 @@
 package com.demo.rest;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -43,27 +48,32 @@ public class CartEndpoint implements Serializable {
     @POST
     @Path("/{cartId}/{itemId}/{quantity}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ShoppingCart add(@PathParam("cartId") String cartId,
+    public Response add(@PathParam("cartId") String cartId,
+                            @NotBlank(message = "itemId must not be blank") 
                             @PathParam("itemId") String itemId,
+                            @Min(value = 1, message = "quantity must be at least 1")
                             @PathParam("quantity") int quantity) {
-        return shoppingCartService.addItem(cartId, itemId, quantity);
+        return Response.ok(shoppingCartService.addItem(cartId, itemId, quantity)).build();
     }
 
     @POST
     @Path("/{cartId}/{tmpId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ShoppingCart set(@PathParam("cartId") String cartId,
+    public Response set(@PathParam("cartId") String cartId,
+                            @NotBlank(message = "tmpId must not be blank") 
                             @PathParam("tmpId") String tmpId) {
-        return shoppingCartService.set(cartId, tmpId);
+        return Response.ok(shoppingCartService.set(cartId, tmpId)).build();
     }
 
     @DELETE
     @Path("/{cartId}/{itemId}/{quantity}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ShoppingCart delete(@PathParam("cartId") String cartId,
-                               @PathParam("itemId") String itemId,
-                               @PathParam("quantity") int quantity) {
-        return shoppingCartService.deleteItem(cartId, itemId, quantity);
+    public Response delete(@PathParam("cartId") String cartId,
+                                @NotBlank(message = "itemId must not be blank") 
+                                @PathParam("itemId") String itemId,
+                                @Min(value = 1, message = "quantity must be at least 1")
+                                @PathParam("quantity") int quantity) {
+        return Response.ok(shoppingCartService.deleteItem(cartId, itemId, quantity)).build();
     }
 
     @POST
