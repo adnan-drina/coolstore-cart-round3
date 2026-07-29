@@ -110,3 +110,10 @@ VERIFIED: application.properties updated with Quarkus REST client configuration;
 
 T-032: Update Maven dependencies for quarkus-rest-client - COMPLETED
 VERIFIED: quarkus-rest-client dependency added to pom.xml; Maven build successful; sensors GREEN
+
+T-033: Convert CatalogService from FeignClient to quarkus-rest-client - COMPLETED
+VERIFIED: CatalogService interface converted from Spring Cloud OpenFeign to Quarkus REST Client; @FeignClient replaced with @RegisterRestClient(configKey = "catalog-service"); @GetMapping converted to @GET @Path JAX-RS annotations; products() method signature preserved; package converted from com.redhat.coolstore to com.demo; CATALOG_ENDPOINT environment variable preserved; quarkus-rest-client-jackson dependency added; all tests pass; sensors GREEN
+
+
+T-034: Create interface contract tests - COMPLETED
+VERIFIED: ServiceInterfacesTest.java created with comprehensive interface contract validation; tests all 7 ShoppingCartService method signatures with correct return types; tests CatalogService @RegisterRestClient annotation and JAX-RS annotations; validates products() method returns List<Product>; verifies CATALOG_ENDPOINT environment variable preserved in application.properties with default fallback; all tests pass; sensors GREEN
