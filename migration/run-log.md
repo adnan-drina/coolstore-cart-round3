@@ -124,6 +124,9 @@ VERIFIED: ShoppingCartService interface harvested from staging; package converte
 T-031: Migrate application.properties with environment-driven config - COMPLETED  
 VERIFIED: application.properties updated with Quarkus REST client configuration; CATALOG_ENDPOINT environment variable preserved per migration.yaml preserve contract; sensors GREEN
 
+T-032: Update Maven dependencies for quarkus-rest-client - COMPLETED
+VERIFIED: quarkus-rest-client dependency added to pom.xml; Maven build successful; sensors GREEN
+
 ## M5 EVALUATION - FINAL FINDINGS DELTA ANALYSIS
 
 ### Final Migration Progress Summary
