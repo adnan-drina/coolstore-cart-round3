@@ -70,3 +70,31 @@ epoch,stage,attempt,class,action
 1785317936,preflightfix-r1,1,success,commit
 1785318249,m5-ship,0,pipeline_succeeded,coolstore-cart-round3-push-8r6kj
 1785318249,m5-ship,0,story_gate_pass,non-deploy story
+1785319896,T-001,1,success,commit
+1785320029,T-002,1,success,commit
+1785321232,T-003,1,success,commit
+1785323229,T-004-a1p0,0,slow_session,1856s
+1785323229,T-004,1,success,commit
+1785323725,T-005,1,no_commit,retrying
+1785324546,T-005,2,success,commit
+1785324546,scope,0,scope_violation,src/main/java/com/demo/service/ShoppingCartService.java src/main/java/com/demo/service/ShoppingCartServiceImpl.java
+1785324550,T-005,0,sensor_red_post_commit,verify
+1785327397,T-006-a1p0,0,slow_session,1923s
+1785327397,T-006,1,success,commit
+1785327415,T-006,0,sensor_red_post_commit,verify
+1785327452,T-006,0,style_autofix,partial
+1785328306,T-006,0,sfix_committed_still_red,verify
+1785328306,T-006,0,debt_recorded,milestone
+1785328604,T-007,1,success,commit
+1785328604,scope,0,scope_violation,src/main/java/com/demo/rest/ValidationExceptionMapper.java
+1785328623,T-007,0,sensor_red_post_commit,verify
+1785330367,T-008,1,orphan_worker,retrying
+1785331900,T-008,1,no_commit,retrying
+1785333425,T-008,2,success,commit
+1785334515,T-009,1,success,commit
+1785335152,T-010,1,success,commit
+1785335471,m5-evaluate,1,success,commit
+1785335703,m5-ship,0,pipeline_succeeded,coolstore-cart-round3-push-wq96p
+1785336600,deployfix-r1,1,success,commit
+1785336805,m5-ship,0,pipeline_succeeded,coolstore-cart-round3-push-qmvk6
+1785336815,m5-ship,0,acceptance_pass,route=200,products=1
