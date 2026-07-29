@@ -6,6 +6,8 @@ import com.demo.model.ShoppingCart;
 public interface ShoppingCartService {
     ShoppingCart getShoppingCart(String cartId);
 
+    ShoppingCart getShoppingCartIfExists(String cartId);
+
     Product getProduct(String itemId);
 
     ShoppingCart deleteItem(String cartId, String itemId, int quantity);

@@ -2,7 +2,7 @@ package com.demo.rest;
 
 import java.io.Serializable;
 
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -11,11 +11,12 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import com.demo.model.ShoppingCart;
 import com.demo.service.ShoppingCartService;
 
-@SessionScoped
+@ApplicationScoped
 @Path("/cart")
 public class CartEndpoint implements Serializable {
 
@@ -31,8 +32,12 @@ public class CartEndpoint implements Serializable {
     @GET
     @Path("/{cartId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ShoppingCart getCart(@PathParam("cartId") String cartId) {
-        return shoppingCartService.getShoppingCart(cartId);
+    public Response getCart(@PathParam("cartId") String cartId) {
+        ShoppingCart cart = shoppingCartService.getShoppingCartIfExists(cartId);
+        if (cart == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        return Response.ok(cart).build();
     }
 
     @POST
