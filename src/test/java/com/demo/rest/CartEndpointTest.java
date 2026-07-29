@@ -75,7 +75,7 @@ class CartEndpointTest {
     void shouldReturn400ForBlankItemIdOnAdd() {
         given()
             .when()
-            .post("/cart/cart1//1")
+            .post("/cart/cart1/ /1")  // Using space to trigger @NotBlank validation
             .then()
             .statusCode(400)
             .contentType(ContentType.JSON)
@@ -101,7 +101,7 @@ class CartEndpointTest {
     void shouldReturn400ForBlankItemIdOnDelete() {
         given()
             .when()
-            .delete("/cart/cart1//1")
+            .delete("/cart/cart1/ /1")  // Using space to trigger @NotBlank validation
             .then()
             .statusCode(400)
             .contentType(ContentType.JSON)
@@ -114,7 +114,7 @@ class CartEndpointTest {
     void shouldReturn400ForBlankTmpIdOnSet() {
         given()
             .when()
-            .post("/cart/cart1/")
+            .post("/cart/cart1/%20")  // Using URL-encoded space to trigger @NotBlank validation
             .then()
             .statusCode(400)
             .contentType(ContentType.JSON)

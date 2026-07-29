@@ -2,12 +2,15 @@ package com.demo.rest;
 
 import java.util.Map;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
 @Provider
+@ApplicationScoped
 public class ValidationExceptionMapper implements ExceptionMapper<ConstraintViolationException> {
 
     @Override
