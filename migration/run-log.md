@@ -246,3 +246,8 @@ VERIFIED: CATALOG_ENDPOINT environment variable preservation verified through ap
 - **Behavioral Equivalence:** VERIFIED ✅
 
 **M5 EVALUATION COMPLETE** - The Spring Boot to Quarkus migration demonstrates exceptional success with 75% violation reduction and 79% incident reduction. The core migration foundation is production-ready with full behavioral preservation. Remaining findings are properly classified for future story ownership (5 violations) or genuine technical debt resolution (1 violation). The migration successfully modernizes the legacy application while maintaining all business logic and API contracts.
+T-001: rewrite: SUCCESS - 1 attempt - src/main/java/com/demo/service/PromoService.java
+T-002: rewrite: SUCCESS - 1 attempt - src/main/java/com/demo/service/ShippingService.java
+
+T-003: Convert ShoppingCartServiceImpl to CDI @ApplicationScoped - COMPLETED
+VERIFIED: ShoppingCartServiceImpl converted to CDI with constructor injection, ConcurrentHashMap thread-safe state management, catalogService field typo fixed, tests pass
