@@ -62,7 +62,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         if (sc != null) {
             initShoppingCartForPricing(sc);
 
-            if (sc.getShoppingCartItemList() != null && sc.getShoppingCartItemList().size() > 0) {
+            if (sc.getShoppingCartItemList() != null && !sc.getShoppingCartItemList().isEmpty()) {
                 promoService.applyCartItemPromotions(sc);
 
                 for (ShoppingCartItem sci : sc.getShoppingCartItemList()) {
