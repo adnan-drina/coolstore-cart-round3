@@ -12,7 +12,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.demo.model.Product;
 import com.demo.model.ShoppingCart;
 import com.demo.model.ShoppingCartItem;
 import org.junit.jupiter.api.BeforeEach;
