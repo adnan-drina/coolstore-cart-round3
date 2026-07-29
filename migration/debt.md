@@ -8,3 +8,7 @@ All prior sensor-RED entries resolved at the green ship (ee127fd). New unresolve
 **Required:** CartEndpoint.java calls `getShoppingCartIfExists()` but service interface only has `getShoppingCart()` 
 **Action:** Add `getShoppingCartIfExists()` method to ShoppingCartService interface and implementation to return null for non-existent carts
 **Status:** RESOLVED - Added getShoppingCartIfExists() method that returns null for non-existent carts, removed unnecessary throws Exception declarations
+
+## T-006 — milestone RED
+- head: bc0ea21
+- reason: sensor-fix committed but milestone still RED
