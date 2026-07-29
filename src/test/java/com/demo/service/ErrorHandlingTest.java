@@ -290,7 +290,7 @@ class ErrorHandlingTest {
     }
 
     @Test
-    void concurrentOperations_withFailures_maintainConsistency() throws InterruptedException {
+    void concurrentOperations_withFailures_maintainConsistency() {
         // This test validates that even with service failures, cart operations
         // maintain consistency in concurrent scenarios
         

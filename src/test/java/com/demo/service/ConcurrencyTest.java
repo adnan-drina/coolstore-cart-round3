@@ -308,11 +308,4 @@ class ConcurrencyTest {
         assertEquals(0, errors.get());
     }
 
-    private ShoppingCartItem createItem(String itemId, double price, int quantity) {
-        ShoppingCartItem item = new ShoppingCartItem();
-        item.setProduct(new Product(itemId, "Test", "Test product", price));
-        item.setPrice(price);
-        item.setQuantity(quantity);
-        return item;
-    }
 }
