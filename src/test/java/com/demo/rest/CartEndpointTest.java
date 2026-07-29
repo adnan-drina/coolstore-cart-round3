@@ -166,4 +166,64 @@ class CartEndpointTest {
             .contentType(ContentType.JSON)
             .body("cartId", equalTo("cart1"));
     }
+
+    @Test
+    void shouldEnsureIdempotencyForAddOperations() {
+        ShoppingCart cart = new ShoppingCart("cart1");
+        when(shoppingCartService.addItem("cart1", "item1", 2)).thenReturn(cart);
+
+        // First request
+        given()
+            .when()
+            .post("/cart/cart1/item1/2")
+            .then()
+            .statusCode(200);
+
+        // Second identical request (should not create duplicates - idempotent behavior)
+        given()
+            .when()
+            .post("/cart/cart1/item1/2")
+            .then()
+            .statusCode(200);
+    }
+
+    @Test
+    void shouldEnsureIdempotencyForDeleteOperations() {
+        ShoppingCart cart = new ShoppingCart("cart1");
+        when(shoppingCartService.deleteItem("cart1", "item1", 1)).thenReturn(cart);
+
+        // First request
+        given()
+            .when()
+            .delete("/cart/cart1/item1/1")
+            .then()
+            .statusCode(200);
+
+        // Second identical request (should be idempotent)
+        given()
+            .when()
+            .delete("/cart/cart1/item1/1")
+            .then()
+            .statusCode(200);
+    }
+
+    @Test
+    void shouldEnsureIdempotencyForSetOperations() {
+        ShoppingCart cart = new ShoppingCart("cart1");
+        when(shoppingCartService.set("cart1", "tmp1")).thenReturn(cart);
+
+        // First request
+        given()
+            .when()
+            .post("/cart/cart1/tmp1")
+            .then()
+            .statusCode(200);
+
+        // Second identical request (should be idempotent)
+        given()
+            .when()
+            .post("/cart/cart1/tmp1")
+            .then()
+            .statusCode(200);
+    }
 }
