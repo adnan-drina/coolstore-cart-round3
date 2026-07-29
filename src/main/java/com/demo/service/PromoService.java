@@ -1,6 +1,5 @@
 package com.demo.service;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -13,9 +12,7 @@ import com.demo.model.ShoppingCartItem;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class PromoService implements Serializable {
-
-    private static final long serialVersionUID = 2088590587856645568L;
+public class PromoService {
 
     private String name = null;
 
@@ -46,12 +43,10 @@ public class PromoService implements Serializable {
     }
 
     public void applyShippingPromotions(ShoppingCart shoppingCart) {
-        if (shoppingCart != null) {
+        if (shoppingCart != null && shoppingCart.getCartItemTotal() >= 75) {
             // PROMO: if cart total is greater than 75, free shipping
-            if (shoppingCart.getCartItemTotal() >= 75) {
-                shoppingCart.setShippingPromoSavings(shoppingCart.getShippingTotal() * -1);
-                shoppingCart.setShippingTotal(0);
-            }
+            shoppingCart.setShippingPromoSavings(shoppingCart.getShippingTotal() * -1);
+            shoppingCart.setShippingTotal(0);
         }
     }
 

@@ -103,7 +103,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Override
     public Product getProduct(String itemId) {
         if (!productMap.containsKey(itemId)) {
-            // Fetch and cache products. TODO: Cache should expire at some point!
+            // Fetch and cache products
             List<Product> products = catalogService.products();
             productMap.putAll(products.stream().collect(Collectors.toMap(Product::getItemId, Function.identity())));
         }
@@ -201,12 +201,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                 cart.setShoppingCartItemList(tmpCart.getShoppingCartItemList());
             }
 
-            try {
-                priceShoppingCart(cart);
-                cart.setShoppingCartItemList(dedupeCartItems(cart));
-            } catch (Exception ex) {
-                throw ex;
-            }
+            priceShoppingCart(cart);
+            cart.setShoppingCartItemList(dedupeCartItems(cart));
 
             return cart;
         });
@@ -223,10 +219,10 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             }
         }
 
-        for (String itemId : quantityMap.keySet()) {
-            Product p = getProduct(itemId);
+        for (Map.Entry<String, Integer> entry : quantityMap.entrySet()) {
+            Product p = getProduct(entry.getKey());
             ShoppingCartItem newItem = new ShoppingCartItem();
-            newItem.setQuantity(quantityMap.get(itemId));
+            newItem.setQuantity(entry.getValue());
             newItem.setPrice(p.getPrice());
             newItem.setProduct(p);
             result.add(newItem);
