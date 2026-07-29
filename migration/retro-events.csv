@@ -34,3 +34,23 @@ epoch,stage,attempt,class,action
 1785273008,m5-evaluate,1,success,commit
 1785273186,m5-ship,0,pipeline_succeeded,coolstore-cart-round3-push-7tk6m
 1785273186,m5-ship,0,story_gate_pass,non-deploy story
+1785306560,T-033,1,success,commit
+1785307012,T-034,1,success,commit
+1785307012,T-034,0,sensor_red_post_commit,verify
+1785307030,T-034,0,style_autofix,partial
+1785307227,T-034,0,sfix_committed_still_red,verify
+1785307227,T-034,0,debt_recorded,task
+1785307352,T-035,1,no_commit,retrying
+1785307630,T-035,2,success,commit
+1785307630,scope,0,later_story_class,src/main/java/com/demo/service/PromoService.java src/main/java/com/demo/service/ShippingService.java src/main/java/com/demo/service/ShoppingCartServiceImpl.java
+1785307630,T-035,0,sensor_red_post_commit,verify
+1785308549,T-035,0,debt_recorded,task
+1785308669,m5-evaluate,1,success,commit
+1785308809,m5-ship,0,preflight_red,round=1
+1785311232,T-033,1,no_commit,retrying
+1785311281,T-033,2,success,commit
+1785311384,T-034,1,success,commit
+1785311760,T-035,1,success,commit
+1785312026,m5-evaluate,1,success,commit
+1785312201,m5-ship,0,pipeline_succeeded,coolstore-cart-round3-push-s48h7
+1785312201,m5-ship,0,story_gate_pass,non-deploy story
