@@ -3,12 +3,12 @@
 ## Executive summary
 
 Autonomous migration of coolstore-cart-round3:
-story gate passed (non-deploy story): pipeline + quality gate green. Findings delta and per-task detail: migration/run-log.md;
+success: shipped, route 200, 1 products. Findings delta and per-task detail: migration/run-log.md;
 debt: migration/debt.md. Orchestrator custom:maas-m2/minimax-m2,
-worker qwen27b/qwen3-6-27b, 53 model sessions.
+worker qwen27b/qwen3-6-27b, 72 model sessions.
 
-- Outcome: story gate passed (non-deploy story): pipeline + quality gate green
-- Supervisor version: 5f63476f; run base: aadbdada0347efb084310f1eba8615af49f64662
+- Outcome: success: shipped, route 200, 1 products
+- Supervisor version: 5f63476f; run base: 52597001b9e19d3b7746a2515d422565c5170d98
 - Orchestrator: custom:maas-m2/minimax-m2; worker: qwen27b/qwen3-6-27b
 
 ## Sessions
@@ -68,24 +68,44 @@ worker qwen27b/qwen3-6-27b, 53 model sessions.
 | T-006-sfix | 862 | rc=0 |
 | m5-evaluate-a1p0 | 86 | rc=0 |
 | preflightfix-r1-a1p0 | 759 | rc=0 |
+| retro | 108 | rc=0 |
+| T-001-a1p0 | 1251 | rc=0 |
+| T-002-a1p0 | 124 | rc=0 |
+| T-003-a1p0 | 1195 | rc=0 |
+| T-004-a1p0 | 1856 | rc=0 |
+| T-005-a1p0 | 488 | rc=0 |
+| T-005-a2p0 | 821 | rc=0 |
+| T-005-sfix | 902 | rc=124 |
+| T-006-a1p0 | 1923 | rc=0 |
+| T-006-sfix | 835 | rc=0 |
+| T-007-a1p0 | 298 | rc=0 |
+| T-007-sfix | 903 | rc=124 |
+| T-008-a1p0 | 806 | rc=0 |
+| T-008-a1p1 | 333 | rc=0 |
+| T-008-a2p1 | 1524 | rc=0 |
+| T-009-a1p0 | 1071 | rc=0 |
+| T-010-a1p0 | 485 | rc=0 |
+| m5-evaluate-a1p0 | 99 | rc=0 |
+| deployfix-r1-a1p0 | 887 | rc=0 |
 
 - Escalations (KPI, from supervisor events): 0 (untested: 0)
 
 ## Classified events
 
 ```
-     31 success
-      8 sensor_red_post_commit
+     43 success
+     11 sensor_red_post_commit
+      6 pipeline_succeeded
+      5 sfix_committed_still_red
+      5 no_commit
+      5 debt_recorded
+      4 style_autofix
       4 story_gate_pass
-      4 sfix_committed_still_red
-      4 pipeline_succeeded
-      4 debt_recorded
-      3 style_autofix
-      3 no_commit
+      4 scope_violation
+      3 slow_session
+      3 orphan_worker
       2 sensor_red_at_entry
-      2 scope_violation
       2 preflight_red
-      2 orphan_worker
-      1 slow_session
       1 later_story_class
+      1 acceptance_pass
 ```
