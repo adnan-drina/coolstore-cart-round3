@@ -313,3 +313,5 @@ T-006|infer|1|SUCCESS|src/test/java/com/demo/service/ErrorHandlingTest.java
 
 T-003: Remove Spring Boot application bootstrap - COMPLETED
 VERIFIED: CartServiceApplication.java not present in destination - task satisfied by absence of Spring Boot bootstrap class; Quarkus handles bootstrap natively via @Path annotation auto-discovery
+
+T-007|infer|1|SUCCESS|src/main/java/com/demo/rest/ServiceExceptionMapper.java created with proper exception mapping
