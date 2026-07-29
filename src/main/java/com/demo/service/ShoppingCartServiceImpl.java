@@ -59,6 +59,15 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         return cart;
     }
 
+    @Override
+    public ShoppingCart getShoppingCartIfExists(String cartId) {
+        ShoppingCart cart = carts.get(cartId);
+        if (cart != null) {
+            priceShoppingCart(cart);
+        }
+        return cart;
+    }
+
     public void priceShoppingCart(ShoppingCart sc) {
         if (sc != null) {
             initShoppingCartForPricing(sc);
