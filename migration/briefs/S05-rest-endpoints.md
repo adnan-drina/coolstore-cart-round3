@@ -19,46 +19,61 @@ read:
 
 - `src/main/java/com/redhat/coolstore/rest/CartEndpoint.java` — JAX-RS REST controller (REDESIGN)
   ```java
+  import javax.ws.rs.*;  // → jakarta.ws.rs (JAX-RS: @GET/@POST/@DELETE/@Path/@PathParam/@Produces)
   import org.springframework.beans.factory.annotation.Autowired;  // → CDI constructor injection
-  import javax.ws.rs.*;  // → jakarta.ws.rs
-  
+  import org.springframework.web.bind.annotation.RestController;   // Spring — Quarkus uses JAX-RS only
+  import org.springframework.context.annotation.Scope;             // → dropped (Quarkus @ApplicationScoped)
+
   @RestController
+  @Scope(scopeName = WebApplicationContext.SCOPE_SESSION)
   @Path("/cart")
-  public class CartEndpoint {
+  public class CartEndpoint implements Serializable {
       @Autowired
-      private ShoppingCartService cartService;  // → constructor injection
-      
-      @GetMapping("/{cartId}")
-      public ShoppingCart getCart(@PathVariable String cartId) {
-          return cartService.getShoppingCart(cartId);  // May create cart if missing (legacy behavior)
-      }
-      
-      @PostMapping("/{cartId}/{itemId}/{quantity}")
-      public ShoppingCart addItem(...) { ... }
-      
-      @PostMapping("/checkout/{cartId}")
-      public ShoppingCart checkout(...) { ... }
+      private ShoppingCartService shoppingCartService;  // → constructor injection
+
+      @GET
+      @Path("/{cartId}")
+      @Produces(MediaType.APPLICATION_JSON)
+      public ShoppingCart getCart(@PathParam("cartId") String cartId) { }
+
+      @POST
+      @Path("/{cartId}/{itemId}/{quantity}")
+      @Produces(MediaType.APPLICATION_JSON)
+      public ShoppingCart add(@PathParam("cartId") String cartId, @PathParam("itemId") String itemId, @PathParam("quantity") int quantity) throws Exception { }
+
+      @POST
+      @Path("/{cartId}/{tmpId}")
+      public ShoppingCart set(@PathParam("cartId") String cartId, @PathParam("tmpId") String tmpId) throws Exception { }
+
+      @DELETE
+      @Path("/{cartId}/{itemId}/{quantity}")
+      public ShoppingCart delete(@PathParam("cartId") String cartId, @PathParam("itemId") String itemId, @PathParam("quantity") int quantity) throws Exception { }
+
+      @POST
+      @Path("/checkout/{cartId}")
+      public ShoppingCart checkout(@PathParam("cartId") String cartId) { }
   }
   ```
 
-- `src/main/java/com/redhat/coolstore/rest/JerseyConfig.java` — Jersey configuration (REMOVED)
+- `src/main/java/com/redhat/coolstore/rest/JerseyConfig.java` — Jersey configuration (REMOVED — Quarkus auto-discovers JAX-RS resources)
   ```java
-  import org.glassfish.jersey.server.ResourceConfig;  // → REMOVED - Quarkus auto-discovers
-  
+  import org.glassfish.jersey.server.ResourceConfig;  // → REMOVED
+
   @Component
   public class JerseyConfig extends ResourceConfig {
       public JerseyConfig() {
-          register(RestClient.class);
+          register(CartEndpoint.class);
       }
   }
   ```
 
-- `src/main/java/com/redhat/coolstore/CartServiceApplication.java` — Spring Boot bootstrap (REMOVED)
+- `src/main/java/com/redhat/coolstore/CartServiceApplication.java` — Spring Boot bootstrap (REMOVED — Quarkus owns bootstrap)
   ```java
   import org.springframework.boot.SpringApplication;  // → REMOVED
   import org.springframework.boot.autoconfigure.SpringBootApplication;  // → REMOVED
-  
+
   @SpringBootApplication
+  @EnableFeignClients
   public class CartServiceApplication {
       public static void main(String[] args) {
           SpringApplication.run(CartServiceApplication.class, args);  // → REMOVED

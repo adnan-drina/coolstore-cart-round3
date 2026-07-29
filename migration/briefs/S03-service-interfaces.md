@@ -17,30 +17,31 @@ the load-bearing legacy code (the lines being transformed — imports,
 annotations, key methods), so the story never starts from a blank
 read:
 
-- `src/main/java/com/redhat/coolstore/service/ShoppingCartService.java` — service interface defining cart operations
+- `src/main/java/com/redhat/coolstore/service/ShoppingCartService.java` — service interface defining cart operations (plain interface, NO annotation)
   ```java
-  import javax.enterprise.context.ApplicationScoped;  // → jakarta.enterprise.context.ApplicationScoped
-  
-  @ApplicationScoped
+  import com.redhat.coolstore.model.Product;
+  import com.redhat.coolstore.model.ShoppingCart;
+
   public interface ShoppingCartService {
-      ShoppingCart createShoppingCart(String cartId);
       ShoppingCart getShoppingCart(String cartId);
-      ShoppingCart addItem(String cartId, String itemId, int quantity);
-      ShoppingCart removeItem(String cartId, String itemId, int quantity);
-      ShoppingCart removeAllItems(String cartId);
+      Product getProduct(String itemId);
+      ShoppingCart deleteItem(String cartId, String itemId, int quantity);
       ShoppingCart checkout(String cartId);
+      ShoppingCart addItem(String cartId, String itemId, int quantity);
+      ShoppingCart set(String cartId, String tmpId);
+      void priceShoppingCart(ShoppingCart sc);
   }
   ```
 
 - `src/main/java/com/redhat/coolstore/service/CatalogService.java` — Feign client for catalog service integration
   ```java
-  import org.springframework.cloud.openfeign.FeignClient;  // → quarkus-rest-client
+  import org.springframework.cloud.openfeign.FeignClient;  // → quarkus-rest-client @RegisterRestClient
   import org.springframework.web.bind.annotation.GetMapping;  // → jakarta.ws.rs.GET
-  
-  @FeignClient(name = "catalog-service", url = "${CATALOG_ENDPOINT}")
+
+  @FeignClient(name = "catalogService", url = "${CATALOG_ENDPOINT}")
   public interface CatalogService {
       @GetMapping("/api/products")
-      List<Product> getProducts();
+      List<Product> products();
   }
   ```
 
@@ -100,9 +101,8 @@ re-decide). Recipe-executed rules already handled: reference
   - Default fallback: http://localhost:8081 (preserved)
   - Configuration location: application.properties
 - **Behavioral pins** (interface contract preservation):
-  - ShoppingCartService interface: all method signatures preserved exactly
-  - Cart lifecycle operations: create, get, addItem, removeItem, removeAllItems, checkout
-  - Catalog service integration: getProducts() returns List<Product> with same Product entity structure
+  - ShoppingCartService interface: all seven method signatures preserved EXACTLY — getShoppingCart, getProduct, deleteItem, checkout, addItem, set, priceShoppingCart (no renames; callers ShoppingCartServiceImpl and CartEndpoint depend on them)
+  - Catalog service integration: `products()` returns List<Product> — the method name is preserved (ShoppingCartServiceImpl calls `products()`); only the client mechanism changes (FeignClient → quarkus-rest-client)
 - **Forbidden**: None applicable to interfaces
 
 ## Done-criteria

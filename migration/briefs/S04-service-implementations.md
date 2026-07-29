@@ -39,31 +39,27 @@ read:
 
 - `src/main/java/com/redhat/coolstore/service/PromoService.java` — promotion calculation
   ```java
-  import org.springframework.beans.factory.annotation.Autowired;  // → CDI constructor injection
-  
+  import org.springframework.stereotype.Component;  // → @ApplicationScoped
+
   @Component
-  public class PromoService {
-      private static final Map<String, Promotion> PROMOS = Map.of(
-          "329299", new Promotion("329299", 25.0)
-      );
-      // Static promotion data → thread-safe access pattern
+  public class PromoService implements Serializable {
+      private Set<Promotion> promotionSet = new HashSet<>();  // seeded in the constructor
+      public PromoService() { }
+      public void applyCartItemPromotions(ShoppingCart shoppingCart) { }
+      public void applyShippingPromotions(ShoppingCart shoppingCart) { }
+      public Set<Promotion> getPromotions() { }
+      public void setPromotions(Set<Promotion> promotionSet) { }
   }
   ```
 
 - `src/main/java/com/redhat/coolstore/service/ShippingService.java` — shipping cost calculation
   ```java
-  import org.springframework.beans.factory.annotation.Autowired;  // → CDI constructor injection
-  
-  @Component  
+  import org.springframework.stereotype.Component;  // → @ApplicationScoped
+
+  @Component
   public class ShippingService {
-      // Stateless service → no mutable state
-      public double calculateShipping(double cartTotal) {
-          if (cartTotal >= 100) return 10.99;
-          if (cartTotal >= 75) return 8.99;
-          if (cartTotal >= 50) return 6.99;
-          if (cartTotal >= 25) return 4.99;
-          return 2.99;
-      }
+      // mutates the cart's shipping totals in place — returns void, takes the cart
+      public void calculateShipping(ShoppingCart sc) { }
   }
   ```
 
