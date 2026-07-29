@@ -101,3 +101,12 @@ T-005|infer|1|SUCCESS|src/test/java/com/demo/model/ProductTest.java created with
 - **Code coverage:** ≥80% new-code coverage maintained ✓
 
 **M5 EVALUATE COMPLETE** - Migration demonstrates substantial progress with 54% violation reduction and 64% incident reduction. Remaining findings are properly classified for future story ownership (9 violations) or genuine technical debt resolution (2 violations). The migration foundation is solid and ready for subsequent story phases.
+
+T-030: Convert ShoppingCartService interface imports - COMPLETED
+VERIFIED: ShoppingCartService interface harvested from staging; package converted from com.redhat.coolstore to com.demo; all method signatures preserved (getShoppingCart, getProduct, deleteItem, checkout, addItem, set, priceShoppingCart); sensors GREEN
+
+T-031: Migrate application.properties with environment-driven config - COMPLETED  
+VERIFIED: application.properties updated with Quarkus REST client configuration; CATALOG_ENDPOINT environment variable preserved per migration.yaml preserve contract; sensors GREEN
+
+T-032: Update Maven dependencies for quarkus-rest-client - COMPLETED
+VERIFIED: quarkus-rest-client dependency added to pom.xml; Maven build successful; sensors GREEN
