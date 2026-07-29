@@ -8,6 +8,7 @@ import com.demo.model.ShoppingCart;
 import com.demo.model.ShoppingCartItem;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,7 +39,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     private final ConcurrentHashMap<String, ShoppingCart> carts = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Product> productMap = new ConcurrentHashMap<>();
 
-    public ShoppingCartServiceImpl(ShippingService shippingService, CatalogService catalogService, PromoService promoService) {
+    public ShoppingCartServiceImpl(ShippingService shippingService, @RestClient CatalogService catalogService, PromoService promoService) {
         this.shippingService = shippingService;
         this.catalogService = catalogService;
         this.promoService = promoService;
