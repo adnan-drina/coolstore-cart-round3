@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.demo.model.Product;
 
-public class ProductsObjectMother {
+class ProductsObjectMother {
 
     public static List<Product> createVehicleProducts() {
         return Arrays.asList(

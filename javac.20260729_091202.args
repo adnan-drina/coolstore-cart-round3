@@ -1,0 +1,4 @@
+-cp
+/dev/null
+-Xlint:none
+src/test/java/com/demo/service/ProductsObjectMother.java
