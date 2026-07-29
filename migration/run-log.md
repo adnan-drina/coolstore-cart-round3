@@ -118,6 +118,9 @@ VERIFIED: CatalogService interface converted from Spring Cloud OpenFeign to Quar
 T-034: Create interface contract tests - COMPLETED
 VERIFIED: ServiceInterfacesTest.java created with comprehensive interface contract validation; tests all 7 ShoppingCartService method signatures with correct return types; tests CatalogService @RegisterRestClient annotation and JAX-RS annotations; validates products() method returns List<Product>; verifies CATALOG_ENDPOINT environment variable preserved in application.properties with default fallback; all tests pass; sensors GREEN
 
+T-030: Convert ShoppingCartService interface imports - COMPLETED
+VERIFIED: ShoppingCartService interface harvested from staging; package converted from com.redhat.coolstore to com.demo; all method signatures preserved (getShoppingCart, getProduct, deleteItem, checkout, addItem, set, priceShoppingCart); sensors GREEN
+
 ## M5 EVALUATION - FINAL FINDINGS DELTA ANALYSIS
 
 ### Final Migration Progress Summary
