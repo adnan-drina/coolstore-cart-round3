@@ -178,3 +178,6 @@ VERIFIED: quarkus-rest-client dependency added to pom.xml; Maven build successfu
 
 **M5 EVALUATION COMPLETE** - Migration demonstrates exceptional progress with 75% violation reduction and 79% incident reduction. The core migration foundation is solid and production-ready. Remaining findings are properly classified for future story ownership (5 violations) or genuine technical debt resolution (1 violation). The migration successfully modernizes the Spring Boot application to Quarkus with full behavioral preservation.
 T-033 | infer | 1 attempt | already complete | src/main/java/com/demo/service/CatalogService.java
+
+T-034: Create interface contract tests - COMPLETED (verified: already complete)
+VERIFIED: ServiceInterfacesTest.java exists with comprehensive interface contract validation; tests all 7 ShoppingCartService method signatures with correct return types; tests CatalogService @RegisterRestClient annotation and JAX-RS annotations; validates products() method returns List<Product>; verifies CATALOG_ENDPOINT environment variable preserved in application.properties with default fallback; all tests pass; sensors GREEN
