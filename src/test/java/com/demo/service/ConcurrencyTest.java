@@ -102,7 +102,7 @@ class ConcurrencyTest {
 
         ShoppingCart cart = shoppingCartService.getShoppingCart(cartId);
         assertNotNull(cart);
-        assertTrue(cart.getShoppingCartItemList().size() > 0);
+        assertTrue(!cart.getShoppingCartItemList().isEmpty());
         assertTrue(cart.getCartItemTotal() > 0);
     }
 
@@ -270,7 +270,7 @@ class ConcurrencyTest {
         assertEquals(0, errors.get());
         ShoppingCart cart = shoppingCartService.getShoppingCart(cartId);
         assertNotNull(cart);
-        assertTrue(cart.getShoppingCartItemList().size() > 0);
+        assertTrue(!cart.getShoppingCartItemList().isEmpty());
         assertTrue(cart.getCartTotal() > 0);
     }
 
