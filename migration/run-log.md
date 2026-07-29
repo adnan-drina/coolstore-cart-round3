@@ -181,3 +181,6 @@ T-033 | infer | 1 attempt | already complete | src/main/java/com/demo/service/Ca
 
 T-034: Create interface contract tests - COMPLETED (verified: already complete)
 VERIFIED: ServiceInterfacesTest.java exists with comprehensive interface contract validation; tests all 7 ShoppingCartService method signatures with correct return types; tests CatalogService @RegisterRestClient annotation and JAX-RS annotations; validates products() method returns List<Product>; verifies CATALOG_ENDPOINT environment variable preserved in application.properties with default fallback; all tests pass; sensors GREEN
+
+T-035: Address lint preserve verification - COMPLETED
+VERIFIED: CATALOG_ENDPOINT environment variable preservation verified through application.properties configuration and ServiceInterfacesTest.java test coverage; forbidden items (getMockProducts, mock products variations, Fallback to mock) documented as handled by forbidden tripwire sensors; all preserve items properly mapped and verified; sensors GREEN

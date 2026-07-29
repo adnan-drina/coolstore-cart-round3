@@ -221,11 +221,39 @@ quarkus.rest-client.catalog-service.url=${CATALOG_ENDPOINT:http://localhost:8081
 - Configuration tests ensure environment variable preservation
 - REST client tests verify functionality post-conversion
 
+## Preserve Items Mapping (T-035)
+
+**Task**: T-035 - Address lint preserve verification
+
+**Preserve items from migration.yaml**:
+
+| Item | Type | Mapped to | Verification |
+|------|------|-----------|--------------|
+| `CATALOG_ENDPOINT` | preserve | T-031 (CatalogService), T-032 (application.properties) | `application.properties` contains `${CATALOG_ENDPOINT:http://localhost:8081}`; test `catalogEndpointConfigurationPreserved()` validates presence |
+
+**Preserve verification**: `CATALOG_ENDPOINT` is referenced in `application.properties` via `quarkus.rest-client.catalog-service.url=${CATALOG_ENDPOINT:http://localhost:8081}`, preserving the environment variable name exactly as required. The `ServiceInterfacesTest.catalogEndpointConfigurationPreserved()` test asserts the property key exists, contains `CATALOG_ENDPOINT`, and contains the default fallback `http://localhost:8081`.
+
+## Forbidden Items Handling (T-035)
+
+**Forbidden items from migration.yaml** (fabrication tripwires):
+
+| Item | Type | Handling |
+|------|------|----------|
+| `getMockProducts` | forbidden | Tripwire sensor — no code changes; sensors fail any commit introducing this into `src/main` |
+| `mock products` | forbidden | Tripwire sensor — no code changes |
+| `Mock products` | forbidden | Tripwire sensor — no code changes |
+| `mock Products` | forbidden | Tripwire sensor — no code changes |
+| `Fallback to mock` | forbidden | Tripwire sensor — no code changes |
+
+**Rationale**: Forbidden items are fabrication tripwires established from run #2 (T-027). They are NOT preserve items and do not require code-level handling. The harness's forbidden tripwire sensors enforce them at commit time by scanning `src/main` for matching strings. No source code changes are needed; the sensors provide the enforcement. Verification: none of these strings appear in any S03 output files (`ShoppingCartService.java`, `CatalogService.java`, `application.properties`, `ServiceInterfacesTest.java`).
+
 ## Story Completion Criteria
 
-✅ **ShoppingCartService interface compiles** with jakarta.* imports  
-✅ **CatalogService converted** to quarkus-rest-client with @RegisterRestClient  
-✅ **application.properties maintains** ${CATALOG_ENDPOINT} environment configuration  
-✅ **Interface methods preserved** exactly - no behavioral changes  
-✅ **Implementation classes** (S04) can compile against these interfaces  
-✅ **Environment-driven configuration** test passes (catalog service URL configurable)  
+✅ **ShoppingCartService interface compiles** with jakarta.* imports
+✅ **CatalogService converted** to quarkus-rest-client with @RegisterRestClient
+✅ **application.properties maintains** ${CATALOG_ENDPOINT} environment configuration
+✅ **Interface methods preserved** exactly - no behavioral changes
+✅ **Implementation classes** (S04) can compile against these interfaces
+✅ **Environment-driven configuration** test passes (catalog service URL configurable)
+✅ **CATALOG_ENDPOINT preserve item** mapped to T-031/T-032 and verified by test
+✅ **Forbidden items** documented as handled by tripwire sensors (no code changes)
