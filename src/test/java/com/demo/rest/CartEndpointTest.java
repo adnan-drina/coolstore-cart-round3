@@ -113,8 +113,10 @@ class CartEndpointTest {
     @Test
     void shouldReturn400ForBlankTmpIdOnSet() {
         given()
+            .pathParam("cartId", "cart1")
+            .pathParam("tmpId", " ")  // Single space to trigger @NotBlank validation
             .when()
-            .post("/cart/cart1/%20")  // Using URL-encoded space to trigger @NotBlank validation
+            .post("/cart/{cartId}/{tmpId}")
             .then()
             .statusCode(400)
             .contentType(ContentType.JSON)
