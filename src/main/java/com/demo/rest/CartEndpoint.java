@@ -19,7 +19,7 @@ import com.demo.model.ShoppingCart;
 import com.demo.service.ShoppingCartService;
 
 @ApplicationScoped
-@Path("/")
+@Path("/api/cart")
 public class CartEndpoint implements Serializable {
 
     private static final long serialVersionUID = -7227732980791688773L;
@@ -32,6 +32,7 @@ public class CartEndpoint implements Serializable {
     }
 
     @GET
+    @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
     public Response index() {
         // Minimal index page returning service status
@@ -54,7 +55,7 @@ public class CartEndpoint implements Serializable {
     }
 
     @GET
-    @Path("/cart/{cartId}")
+    @Path("/{cartId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getCart(@PathParam("cartId") String cartId) {
         ShoppingCart cart = shoppingCartService.getShoppingCartIfExists(cartId);
@@ -65,7 +66,7 @@ public class CartEndpoint implements Serializable {
     }
 
     @POST
-    @Path("/cart/{cartId}/{itemId}/{quantity}")
+    @Path("/{cartId}/{itemId}/{quantity}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response add(@PathParam("cartId") String cartId,
                             @NotBlank(message = "itemId must not be blank") 
@@ -76,7 +77,7 @@ public class CartEndpoint implements Serializable {
     }
 
     @POST
-    @Path("/cart/{cartId}/{tmpId}")
+    @Path("/{cartId}/{tmpId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response set(@PathParam("cartId") String cartId,
                             @NotBlank(message = "tmpId must not be blank") 
@@ -85,7 +86,7 @@ public class CartEndpoint implements Serializable {
     }
 
     @DELETE
-    @Path("/cart/{cartId}/{itemId}/{quantity}")
+    @Path("/{cartId}/{itemId}/{quantity}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response delete(@PathParam("cartId") String cartId,
                                 @NotBlank(message = "itemId must not be blank") 
@@ -96,7 +97,7 @@ public class CartEndpoint implements Serializable {
     }
 
     @POST
-    @Path("/cart/checkout/{cartId}")
+    @Path("/checkout/{cartId}")
     @Produces(MediaType.APPLICATION_JSON)
     public ShoppingCart checkout(@PathParam("cartId") String cartId) {
         return shoppingCartService.checkout(cartId);
