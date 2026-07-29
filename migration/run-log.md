@@ -121,6 +121,9 @@ VERIFIED: ServiceInterfacesTest.java created with comprehensive interface contra
 T-030: Convert ShoppingCartService interface imports - COMPLETED
 VERIFIED: ShoppingCartService interface harvested from staging; package converted from com.redhat.coolstore to com.demo; all method signatures preserved (getShoppingCart, getProduct, deleteItem, checkout, addItem, set, priceShoppingCart); sensors GREEN
 
+T-031: Migrate application.properties with environment-driven config - COMPLETED  
+VERIFIED: application.properties updated with Quarkus REST client configuration; CATALOG_ENDPOINT environment variable preserved per migration.yaml preserve contract; sensors GREEN
+
 ## M5 EVALUATION - FINAL FINDINGS DELTA ANALYSIS
 
 ### Final Migration Progress Summary
