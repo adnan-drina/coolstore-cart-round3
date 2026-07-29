@@ -310,3 +310,6 @@ VERIFIED: Created comprehensive ConcurrencyTest with 7 test methods covering con
 
 T-006|infer|1|SUCCESS|src/test/java/com/demo/service/ErrorHandlingTest.java
 | T-002 | rewrite | 1 | RESOLVED: JerseyConfig.java not present in destination (already removed) | No files modified - task satisfied by absence of JerseyConfig.java in src/main/java/com/demo/rest/ |
+
+T-003: Remove Spring Boot application bootstrap - COMPLETED
+VERIFIED: CartServiceApplication.java not present in destination - task satisfied by absence of Spring Boot bootstrap class; Quarkus handles bootstrap natively via @Path annotation auto-discovery
