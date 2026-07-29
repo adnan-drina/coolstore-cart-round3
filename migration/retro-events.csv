@@ -54,3 +54,19 @@ epoch,stage,attempt,class,action
 1785312026,m5-evaluate,1,success,commit
 1785312201,m5-ship,0,pipeline_succeeded,coolstore-cart-round3-push-s48h7
 1785312201,m5-ship,0,story_gate_pass,non-deploy story
+1785312928,T-003,1,success,commit
+1785312938,T-003,0,sensor_red_post_commit,verify
+1785312964,T-003,0,style_autofix,partial
+1785314233,T-004,1,success,commit
+1785314732,T-005,1,orphan_worker,retrying
+1785314921,T-005,1,success,commit
+1785315686,T-006,1,success,commit
+1785315828,T-006,0,sensor_red_post_commit,verify
+1785315987,T-006,0,style_autofix,partial
+1785316991,T-006,0,sfix_committed_still_red,verify
+1785316991,T-006,0,debt_recorded,milestone
+1785317143,m5-evaluate,1,success,commit
+1785317177,m5-ship,0,preflight_red,round=1
+1785317936,preflightfix-r1,1,success,commit
+1785318249,m5-ship,0,pipeline_succeeded,coolstore-cart-round3-push-8r6kj
+1785318249,m5-ship,0,story_gate_pass,non-deploy story

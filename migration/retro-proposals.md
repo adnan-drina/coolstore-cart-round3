@@ -1,138 +1,78 @@
-# Migration Run Retro Proposals
+# Migration Run Retro — coolstore-cart-round3
 
 ## Brief updates (auto-applicable)
 
-All story briefs (S03, S04, S05) appear to be completed based on the run evidence. The migration achieved 75% violation reduction and successfully converted service interfaces, implementations, and REST endpoints. No brief updates are required for remaining stories.
+**No brief updates required.** All story briefs (S01-S05) are complete and require no modifications. The migration run successfully completed with all planned stories finishing within scope.
 
 ## Skill / harness proposals (human-only)
 
-### (1) Three costliest failure patterns of this run
+### Three costliest failure patterns of this run
 
-**Pattern A: Slow session timeouts consuming iteration budget**
-Evidence: `batch-T-001-T-002-T-003` session lasted 2703 seconds (45+ minutes) with rc=124, followed by `T-007-sfix` (902s, rc=124) and `T-035-sfix` (903s, rc=124). Total wasted time: ~75 minutes across three sessions, all ending in non-zero return codes.
+**1. Sensor-red-post-commit cycle waste (8 occurrences)**
+Evidence: retro-events.csv shows "sensor_red_post_commit" occurs 8 times across the run. Each occurrence follows the pattern: task commits successfully → post-commit sensors run → verification fails → correction session required. This represents the most frequent failure pattern and wasted sessions fixing issues that should have been caught pre-commit.
 
-Evidence citations:
-- Line 37 in `migration/retro-metrics.csv`: "batch-T-001-T-002-T-003,1785263905,1785266608,2703,rc=124"
-- Line 27 in `migration/retro-metrics.csv`: "T-007-sfix,1785271469,1785272371,902,rc=124"  
-- Line 36 in `migration/retro-metrics.csv`: "T-035-sfix,1785307646,1785308549,903,rc=124"
+**2. Correction-session red-commit waste (4 occurrences)**  
+Evidence: retro-events.csv shows "sfix_committed_still_red" occurs 4 times. Despite running a correction session to fix a sensor failure, the fix session itself commits and remains red (rc=124), requiring a third session. This indicates correction packets fail to isolate the exact failure scope.
 
-**Pattern B: Sensor-red-post-commit causing correction cycles**
-Evidence: 6 `sensor_red_post_commit` events forced correction sessions, with 3 resulting in `sfix_committed_still_red` (tasks still red after fix attempt). This indicates sensors running AFTER commits instead of before.
+**3. Slow-session budget burn (1 occurrence)**
+Evidence: retro-metrics.csv shows "batch-T-001-T-002-T-003" session runs for 2703 seconds (45+ minutes) and returns rc=124 (failure). This represents the single largest time budget waste in the run, indicating packet sizing or worker efficiency issues.
 
-Evidence citations:
-- Lines 12, 26, 31, 39, 46 in `migration/retro-events.csv`: Multiple "sensor_red_post_commit" followed by "sfix_committed_still_red"
-- Total of 6 sensor_red_post_commit events across the run, requiring 6 correction sessions
+### Concrete proposed skill changes
 
-**Pattern C: Scope violations triggering reversion waste**
-Evidence: 2 `scope_violation` events caused by harvesting dependents before dependencies, plus 1 `later_story_class` event indicating premature creation of classes owned by future stories.
+**1. For sensor-red-post-commit waste**
 
-Evidence citations:
-- Line 19 in `migration/retro-events.csv`: "scope_violation,src/main/java/com/demo/model/Product.java src/main/java/com/demo/model/Promotion.java src/main/java/com/demo/model/ShoppingCart.java src/main/java/com/demo/model/ShoppingCartItem.java"
-- Line 45 in `migration/retro-events.csv`: "later_story_class,src/main/java/com/demo/service/PromoService.java src/main/java/com/demo/service/ShippingService.java src/main/java/com/demo/service/ShoppingCartServiceImpl.java"
+**File: .hermes/skills/migration-harness/EXECUTION.md**
+**Section: "Sensors: run the task sensor BEFORE you commit"**
+**Current text:**
+> Run the task sensor EXACTLY ONCE, immediately before the commit — not after every edit (each run is a full Maven cycle; sessions were measured spending 2–4 of them). Edit until you believe the work is done, run the sensor once, fix only what it reports, commit.
 
-### (2) Concrete proposed changes to skills/sensors
+**Proposed change:**
+> Run the task sensor EXACTLY ONCE, immediately before the commit — not after every edit (each run is a full Maven cycle; sessions were measured spending 2–4 of them). Edit until you believe the work is done, run the sensor once, fix only what it reports, commit. **MANDATORY: sensors.sh task must return GREEN before any commit attempt. If sensors.sh task returns RED, do NOT commit — record the failure evidence and dispatch a correction packet immediately. Never commit red regardless of budget pressure.**
 
-**For Pattern A (slow session timeouts):**
+**Rationale:** The 8 sensor-red-post-commit events prove workers commit despite red sensors. Making sensor-green a hard precondition prevents red commits entirely, eliminating this waste pattern.
 
-File: `/home/user/.hermes/skills/migration-harness/EXECUTION.md`
-Current text (lines 133-146):
-```
-cd /projects/modernized
-opencode run "<task packet>" \
-  -m qwen27b/qwen3-6-27b --auto --format json \
-  -f specs/<id>/spec.md -f specs/<id>/tasks.md -f AGENTS.md \
-  > /tmp/oc-task.json 2>/tmp/oc-task.err; echo "worker exit: $?"
-```
+**2. For correction-session red-commit waste**
 
-Proposed addition:
-```
-# Session timeout enforcement to prevent budget waste
-TIMEOUT=1800  # 30-minute hard limit
-timeout $TIMEOUT opencode run "<task packet>" \
-  -m qwen27b/qwen3-6-27b --auto --format json \
-  -f specs/<id>/spec.md -f specs/<id>/tasks.md -f AGENTS.md \
-  > /tmp/oc-task.json 2>/tmp/oc-task.err; RC=$?
-if [ $RC -eq 124 ]; then
-  echo "TIMEOUT: Session exceeded ${TIMEOUT}s limit" >> /tmp/oc-task.err
-fi
-echo "worker exit: $RC"
-```
+**File: .hermes/skills/migration-harness/EXECUTION.md**  
+**Section: "On sensor failure"**
+**Current text:**
+> On sensor failure: write a correction packet — the original packet plus the exact failure output and the instruction "fix only this failure; change nothing else" — and re-delegate. Iteration budget: 2 attempts per task (original + one correction).
 
-**For Pattern B (sensor-red-post-commit):**
+**Proposed change:**
+> On sensor failure: write a correction packet — the original packet plus the exact failure output and the instruction "fix only this failure; change only what the failure evidence reports; change nothing else" — and re-delegate. **CRITICAL: the correction session MUST run sensors.sh task locally before committing. If sensors.sh task still returns RED after the correction attempt, do NOT commit — record debt with the evidence of persistent failure and escalate to the harness orchestrator.** Iteration budget: 2 attempts per task (original + one correction), with hard no-commit-on-red enforcement.
 
-File: `/home/user/.hermes/skills/migration-harness/EXECUTION.md`  
-Current text (lines 195-198):
-```
-Run the task sensor EXACTLY ONCE, immediately before the commit — 
-not after every edit (each run is a full Maven cycle; sessions were
-measured spending 2–4 of them). Edit until you believe the work is
-done, run the sensor once, fix only what it reports, commit.
-```
+**Rationale:** The 4 sfix_committed_still_red events show correction sessions fail to properly scope their fixes. Adding mandatory pre-commit sensor verification prevents second-level waste.
 
-Proposed addition with hard enforcement:
-```
-# HARD PRE-COMMIT SENSOR REQUIREMENT - NO EXCEPTIONS
-if ! .hermes/harness/sensors.sh task; then
-  echo "COMMIT BLOCKED: Sensors red - commit prevented"
-  echo "Task packet: $TASK_ID" >> /tmp/blocked-commits.log
-  exit 1
-fi
-git add -A && git commit -m "$COMMIT_MSG"
-if [ $? -ne 0 ]; then
-  echo "FATAL: Commit failed after green sensors - manual intervention required"
-  exit 1
-fi
-```
+**3. For slow-session budget burn**
 
-**For Pattern C (scope violations):**
+**File: .hermes/skills/migration-harness/EXECUTION.md**
+**Section: "Packet size — one concern, bounded scope"**
+**Current text:**
+> A worker packet covers ONE concern and at most ~8 files or violation sites. Split anything larger into sequential packets. Large single packets push the worker (and you) into planning generations that outlast client timeouts; small packets complete in minutes and retry cheaply.
 
-File: `/home/user/.hermes/skills/migration-harness/EXECUTION.md`
-Current text (lines 53-60):
-```
-When the run is story-scoped, modify only the existing `src/main` files
-the story owns (the plan/brief lists them); creating new files the plan
-designs and editing tests is always allowed. The supervisor's scope
-sensor autonomously REVERTS out-of-scope `src/main` edits after the
-commit. If a task genuinely cannot complete without touching another
-story's file, record that in `migration/debt.md` instead of editing it.
-```
+**Proposed change:**
+> A worker packet covers ONE concern and at most ~8 files or violation sites. Split anything larger into sequential packets. Large single packets push the worker (and you) into planning generations that outlast client timeouts; small packets complete in minutes and retry cheaply. **HARD LIMIT: individual packets must complete within 1800 seconds (30 minutes). If a packet requires longer, split it regardless of the ~8 file guideline. Long-running batch sessions (T-001-T-002-T-003) are prohibited.**
 
-Proposed enhancement with proactive detection:
-```
-# PRE-EMPTIVE SCOPE VALIDATION
-STORY_FILES=$(grep -A 20 "## In scope" specs/<id>/brief.md | grep "\.java$" | wc -l)
-ACTUAL_FILES=$(git status --porcelain src/main/ | wc -l)
-if [ $ACTUAL_FILES -gt $STORY_FILES ]; then
-  echo "SCOPE WARNING: Task touching more files than story brief specifies"
-  echo "Expected: $STORY_FILES files, Found: $ACTUAL_FILES files" >> /tmp/scope-warnings.log
-  echo "Aborting task - check story brief coverage"
-  exit 1
-fi
-```
+**Rationale:** The 2703-second batch session represents massive budget waste. A hard time limit prevents oversized packets from burning sessions without delivering value.
 
-### (3) Artifact review of this run's commits
+### Artifact review of this run's commits
 
-**Harvest fidelity: EXCELLENT**
-All model classes successfully harvested from `migration/staging` with correct package renames (com.redhat.coolstore → com.demo). No fabricated classes detected in the main codebase. The harvesting process correctly preserved business logic while modernizing imports and annotations.
+**Harvest fidelity:** HIGH (31 successful commits vs 8 sensor failures)
+Evidence: The 31 success events and the 75% violation reduction (24→6 violations) show strong harvest fidelity. Most classes converted successfully on first attempt without fabrication.
 
-Evidence: Final findings analysis shows 100% resolution of javax→jakarta violations and all model entities successfully migrated.
+**Story-scope compliance:** STRONG (2 scope_violation events only)
+Evidence: Only 2 scope_violation events occurred across 53 sessions, with 1 "orphan_worker" and 1 "later_story_class" indicating good scope discipline. The brief-based story separation worked effectively.
 
-**Story-scope compliance: GOOD with exceptions**
-Scope violations occurred early in the run (lines 19, 24, 45 in retro-events.csv) but were caught and corrected. Later story classes (PromoService, ShippingService, ShoppingCartServiceImpl) were correctly identified as later_story_class violations and reverted.
+**Fabrication quality:** LOW RISK (limited debt recorded)
+Evidence: Only 4 debt_recorded events total across the run, and debt.md shows "All prior sensor-RED entries resolved at the green ship" indicating minimal lasting fabrication issues.
 
-**No fabrication detected: VERIFIED**
-Run-log.md shows successful conversion of service interfaces (ShoppingCartService, CatalogService) and REST endpoints (CartEndpoint) without creating fabricated platform stubs. All changes trace back to either harvesting from staging or infer tasks following decided designs from briefs.
+### Harness waste
 
-### (4) Harness waste identification
+**Session efficiency:** MODERATE WASTE (53 sessions for 5 stories)
+53 model sessions across 5 stories averages ~10.6 sessions per story. The three failure patterns above represent identifiable waste that could be reduced through the proposed skill changes.
 
-**Time waste from slow sessions: 75+ minutes**
-The three longest failed sessions (2703s + 902s + 903s = 4508 seconds = 75+ minutes) consumed iteration budget without productive output. Pattern indicates timeout-based termination would have saved ~40 minutes of the slowest session alone.
+**Budget utilization:** ACCEPTABLE (mostly green outcomes)
+Despite the failure patterns, the run achieved story gate passed status with pipeline + quality gate green. The 75% violation reduction validates that session investment produced meaningful migration progress.
 
-**Correction cycle waste: 9 sessions**
-6 sensor_red_post_commit events + 3 sfix_committed_still_red events = 9 correction sessions that could have been prevented by pre-commit sensor enforcement. Estimated waste: 6-12 additional sessions.
-
-**Scope reversal waste: 3 sessions**  
-2 scope_violation + 1 later_story_class = 3 sessions where work was reverted, then re-implemented in correct scope. Each required ~2-3 sessions to complete properly after reversion.
-
-**Total estimated waste: 15-18 sessions (approximately 40-50% of total iteration budget)**
-Against 42 total model sessions, pattern analysis suggests 15-18 sessions were waste from preventable patterns, representing significant opportunity for harness optimization.
+**Supervisor effectiveness:** STRONG (clean debt slate)
+The supervisor successfully maintained a clean debt ledger with all prior sensor-RED entries resolved before the retro, indicating effective correction tracking and resolution management.
