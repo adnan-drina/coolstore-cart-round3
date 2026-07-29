@@ -226,4 +226,20 @@ class CartEndpointTest {
             .then()
             .statusCode(200);
     }
+
+    @Test
+    void shouldReturn503ForServiceFailures() {
+        when(shoppingCartService.getShoppingCartIfExists("cart1"))
+            .thenThrow(new RuntimeException("Catalog service unavailable"));
+
+        given()
+            .when()
+            .get("/cart/cart1")
+            .then()
+            .statusCode(503)
+            .contentType(ContentType.JSON)
+            .body("status", equalTo(503))
+            .body("title", equalTo("Service Unavailable"))
+            .body("detail", equalTo("Catalog service unavailable"));
+    }
 }
